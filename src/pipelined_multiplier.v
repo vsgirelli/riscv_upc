@@ -1,10 +1,10 @@
 // Artificial 5-stage multiplier
-module PipelinedMultiplier #(parameter WIDTH = 32)(
+module pipelined_multiplier #(parameter WIDTH = 32)(
   input wire clk,
   input wire rst,
-  input wire [WIDTH-1:0] A,
-  input wire [WIDTH-1:0] B,
-  output reg [2*WIDTH-1:0] P // The output is 64-bit and it should match on the calling modules as well
+  input wire [WIDTH-1:0] operand1,
+  input wire [WIDTH-1:0] operand2,
+  output reg [2*WIDTH-1:0] mult_result // The output is 64-bit and it should match on the calling modules as well
 );
 
 reg [2*WIDTH-1:0] stage1, stage2, stage3, stage4, stage5;
@@ -19,7 +19,7 @@ always @(posedge clk or negedge rst) begin
     stage5 <= 2*WIDTH'b0;
   end else begin
     // Stage 1
-    stage1 = A * B;
+    stage1 = operand1 * operand2;
     // Stage 2
     stage2 = stage1;
     // Stage 3
@@ -27,7 +27,7 @@ always @(posedge clk or negedge rst) begin
     // Stage 4
     stage4 = stage3;
     // Stage 5 (Final result)
-    P = stage4;
+    mult_result = stage4;
   end
 end
 
