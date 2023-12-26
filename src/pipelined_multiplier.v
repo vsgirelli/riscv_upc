@@ -12,21 +12,16 @@ reg [2*WIDTH-1:0] stage1, stage2, stage3, stage4, stage5;
 always @(posedge clk or negedge rst) begin
   if (!rst) begin
     // Reset all pipeline stages
-    stage1 <= 2*WIDTH'b0;
-    stage2 <= 2*WIDTH'b0;
-    stage3 <= 2*WIDTH'b0;
-    stage4 <= 2*WIDTH'b0;
-    stage5 <= 2*WIDTH'b0;
+    stage1 <= 2*{WIDTH{1'b0}};
+    stage2 <= 2*{WIDTH{1'b0}};
+    stage3 <= 2*{WIDTH{1'b0}};
+    stage4 <= 2*{WIDTH{1'b0}};
+    stage5 <= 2*{WIDTH{1'b0}};
   end else begin
-    // Stage 1
     stage1 = operand1 * operand2;
-    // Stage 2
     stage2 = stage1;
-    // Stage 3
     stage3 = stage2;
-    // Stage 4
     stage4 = stage3;
-    // Stage 5 (Final result)
     mult_result = stage4;
   end
 end

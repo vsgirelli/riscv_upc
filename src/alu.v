@@ -13,6 +13,14 @@ module alu #(parameter WIDTH = 32)(
 
 reg [2*WIDTH-1:0] mult_result;  // Temporary variable for multiplication result 64-bit
 
+pipelined_multiplier mult_inst (
+  .clk(clk),
+  .rst(rst),
+  .operand1(operand1),
+  .operand2(operand2),
+  .mult_result(mult_result)
+);
+
 always @(posedge clk or negedge rst) begin
   if (!rst)
     alu_result <= 32'h0;  // Reset result to zero
@@ -20,9 +28,7 @@ always @(posedge clk or negedge rst) begin
     case (alu_op)
       7'b0000000: alu_result = operand1 + operand2; // ADD
       7'b0000001: alu_result = operand1 - operand2; // SUB
-      7'b0000010: // MUL multiplier module
-        pipelined_multiplier #(WIDTH) mult_inst (.operand1(operand1), .operand2(operand2), .mult_result(mult_result));
-      alu_result = mult_result[WIDTH-1:0]; // Extract lower 32 bits as the result
+      7'b0000010: alu_result = mult_result[WIDTH-1:0]; // Extract lower 32 bits as the result// MUL multiplier module
       7'b0000100: alu_result = operand1 & operand2; // AND
       7'b0000101: alu_result = operand1 | operand2; // OR
       7'b0000110: alu_result = operand1 ^ operand2; // XOR
