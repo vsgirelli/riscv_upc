@@ -15,7 +15,7 @@ always @(posedge clk or negedge rst) begin
     // ... other reset actions
   end else begin
     // Write data to the destination register when write_enable is asserted
-    if (write_enable) begin
+    if (regb_write_enable) begin
       registers[destination_register] <= data_in;
     end
   end

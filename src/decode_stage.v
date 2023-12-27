@@ -2,7 +2,7 @@ module decode_stage (
   input wire clk,
   input wire rst,
   input wire [31:0] instruction,
-  output wire [6:0] alu_op,
+  output reg [6:0] alu_op,
   output wire [31:0] operand1, // I don't think these should be here, because they should probably be outputs of the Reg Bank
   output wire [31:0] operand2, // although the reg bank will probably be added here
   output wire [31:0] destination_address, // TODO

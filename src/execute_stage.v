@@ -4,7 +4,7 @@ module execute_stage (
   input wire [31:0] operand1,
   input wire [31:0] operand2,
   input wire [6:0] alu_op,       // 7-bit ALU control input
-  output wire [31:0] alu_result
+  output reg [31:0] alu_result
 );
 
 always @(posedge clk or posedge rst) begin

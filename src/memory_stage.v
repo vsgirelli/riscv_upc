@@ -17,7 +17,7 @@ always @(posedge clk or negedge rst) begin
     // ... other reset actions
   end else begin
     // Memory read
-    if (!write_enable) begin
+    if (!mem_write_enable) begin
       data_out <= memory[destination_address];
     end
     // Memory write
