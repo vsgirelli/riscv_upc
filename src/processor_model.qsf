@@ -18,14 +18,14 @@
 #
 # Quartus II 64-Bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 16:38:24  diciembre 26, 2023
+# Date created = 18:29:19  enero 03, 2024
 #
 # -------------------------------------------------------------------------- #
 #
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		processor_assignment_defaults.qdf
+#		processor_model_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -38,22 +38,23 @@
 
 set_global_assignment -name FAMILY "Cyclone IV GX"
 set_global_assignment -name DEVICE auto
-set_global_assignment -name TOP_LEVEL_ENTITY processor
+set_global_assignment -name TOP_LEVEL_ENTITY processor_model
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:38:24  DICIEMBRE 26, 2023"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "18:29:19  ENERO 03, 2024"
 set_global_assignment -name LAST_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
-set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
-set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
-set_global_assignment -name VERILOG_FILE write_back_stage.v
-set_global_assignment -name VERILOG_FILE processor.v
-set_global_assignment -name VERILOG_FILE pipelined_multiplier.v
-set_global_assignment -name VERILOG_FILE memory_stage.v
-set_global_assignment -name VERILOG_FILE fetch_stage.v
-set_global_assignment -name VERILOG_FILE execute_stage.v
-set_global_assignment -name VERILOG_FILE decode_stage.v
-set_global_assignment -name VERILOG_FILE alu.v
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (SystemVerilog)"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "SYSTEMVERILOG HDL" -section_id eda_simulation
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name SYSTEMVERILOG_FILE alu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE fetch_stage.sv
+set_global_assignment -name SYSTEMVERILOG_FILE decode_stage.sv
+set_global_assignment -name SYSTEMVERILOG_FILE write_back_stage.sv
+set_global_assignment -name SYSTEMVERILOG_FILE memory_stage.sv
+set_global_assignment -name SYSTEMVERILOG_FILE execute_stage.sv
+set_global_assignment -name SYSTEMVERILOG_FILE pipelined_multiplier.sv
+set_global_assignment -name SYSTEMVERILOG_FILE processor_model.sv
+set_global_assignment -name SYSTEMVERILOG_FILE tb_proc.sv
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

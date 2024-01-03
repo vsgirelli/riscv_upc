@@ -1,5 +1,5 @@
 // top_level_module.v
-module processor_module (
+module processor_model (
   input wire clk,
   input wire rst
   // ... other input/output ports

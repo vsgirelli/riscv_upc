@@ -2,7 +2,7 @@
 
 // TEST BENCH MODULE
 // Here we instantiate the whole processor, 
-// set the clock, the reset, and start processor
+// set the clock, the rstet, and start processor
 
 module tb_proc
 #(
@@ -11,12 +11,12 @@ module tb_proc
 () ;
 
   logic clk;
-  logic res = 1;
+  logic rst = 1;
 
   always #(CORE_CLOCK_PERIOD/2)
     clk = ~clk;
 
-  initial res = 1;
+  initial rst = 1;
   initial clk = 1;
 
   integer i = 1;
@@ -27,12 +27,12 @@ module tb_proc
     if (i)
       i <= i-1;
     else
-      res <= 0;
+      rst <= 0;
   end
 
-  processor_module proc0 (
+  processor_model proc0 (
     .clk,
-    .res
+    .rst
   );
 
 endmodule
