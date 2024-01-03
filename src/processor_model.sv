@@ -5,43 +5,58 @@ module processor_model (
   // ... other input/output ports
 );
 
+logic [31:0] instruction_fetched;
+logic [31:0] operand1_processor;
+logic [31:0] operand2_processor;
+logic [6:0] alu_op_processor; 
+logic [31:0] destination_address_processor;
+logic [31:0] mem_write_enable_processor;
+logic [31:0] alu_result_processor;
+logic [31:0] regb_write_enable_processor;
+
+
 fetch_stage fetch_inst (
   .clk(clk),
-  .rst(rst)
+  .rst(rst),
+  .instruction(instruction_fetched)
   // ... other inputs/outputs
 );
+
 
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
-  .instruction(fetch_inst.instruction) // Connect fetch output to decode input
+  .instruction(instruction_fetched), // Connect fetch output to decode input
+  .alu_op(alu_op_processor),
+  .operand1(operand1_processor),
+  .operand2(operand2_processor),
   // ... other inputs/outputs
 );
 
 execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
-  .alu_op(decode_inst.alu_op),
-  .operand1(decode_inst.operand1), // Connect decode output to execute input
-  .operand2(decode_inst.operand2)
+  .alu_op(alu_op_processor),
+  .operand1(operand1_processor), // Connect decode output to execute input
+  .operand2(operand2_processor)
   // ... other inputs/outputs
 );
 
 memory_stage memory_inst (
   .clk(clk),
   .rst(rst),
-  .destination_address(decode_inst.destination_address),
-  .mem_write_enable(decode_inst.mem_write_enable),
-  .data_in(execute_inst.alu_result) // Connect execute output to memory input
+  .destination_address(destination_address_processor),
+  .mem_write_enable(mem_write_enable_processor),
+  .data_in(alu_result_processor) // Connect execute output to memory input
   // ... other inputs/outputs
 );
 
 write_back_stage write_back_inst (
   .clk(clk),
   .rst(rst),
-  .destination_register(decode_inst.destination_register),
-  .regb_write_enable(decode_inst.regb_write_enable),
-  .data_in(execute_inst.alu_result) // Connect memory output to write-back input
+  .destination_register(destination_register_processor),
+  .regb_write_enable(regb_write_enable_processor),
+  .data_in(alu_result_processor) // Connect memory output to write-back input
   // TODO it could be also that the data in receives from memory_inst.data_out
 );
 
