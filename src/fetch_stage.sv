@@ -1,19 +1,16 @@
+import config_pkg::*;
+import instruction_pkg::*;
+
 module fetch_stage (
-  input wire clk,
-  input wire rst,
-  output wire [31:0] instruction
+  input logic clk,
+  input logic rst,
+  output inst_fetched_t inst_fetched_out
 );
 
 reg [31:0] program_counter;
 
 always @(posedge clk or posedge rst) begin
   if (rst) begin
-    program_counter <= 0; // Reset the program counter TODO
-	 instruction <= 32'b0;
-	 end else begin
-    // Fetch the instruction from memory based on the current program counter
-    // TODO instruction <= memory_read(program_counter); // Increment the program counter for the next instruction
-    program_counter <= program_counter + 4;
   end
 end
 

@@ -1,3 +1,6 @@
+import config_pkg::*;
+import instruction_pkg::*;
+
 // top_level_module.v
 module processor_model (
   input wire clk,
@@ -5,20 +8,17 @@ module processor_model (
   // ... other input/output ports
 );
 
-logic [31:0] instruction_fetched;
-logic [31:0] operand1_processor;
-logic [31:0] operand2_processor;
-logic [6:0] alu_op_processor; 
-logic [31:0] destination_address_processor;
-logic [31:0] mem_write_enable_processor;
-logic [31:0] alu_result_processor;
-logic [31:0] regb_write_enable_processor;
-
+inst_fetched_t                          inst_fetched_out;
+inst_fetched_t inst_dec, inst_dec_next;
+inst_decoded_t                          inst_dec_out;
+inst_decoded_t inst_exe, inst_exe_next, inst_exe_out;
+inst_decoded_t inst_mem, inst_mem_next, inst_mem_out;
+inst_decoded_t inst_wb,  inst_wb_next;
 
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
-  .instruction(instruction_fetched)
+  .inst_fetched_out(inst_fetched_out)
   // ... other inputs/outputs
 );
 
@@ -26,38 +26,31 @@ fetch_stage fetch_inst (
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
-  .instruction(instruction_fetched), // Connect fetch output to decode input
-  .alu_op(alu_op_processor),
-  .operand1(operand1_processor),
-  .operand2(operand2_processor),
+  .inst_fetched_in(inst_fetched_out),
+  .inst_dec_out(inst_dec_out)
   // ... other inputs/outputs
 );
 
 execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
-  .alu_op(alu_op_processor),
-  .operand1(operand1_processor), // Connect decode output to execute input
-  .operand2(operand2_processor)
+  .inst_exe_in(inst_dec_out),
+  .inst_exe_out(inst_exe_out)
   // ... other inputs/outputs
 );
 
 memory_stage memory_inst (
   .clk(clk),
   .rst(rst),
-  .destination_address(destination_address_processor),
-  .mem_write_enable(mem_write_enable_processor),
-  .data_in(alu_result_processor) // Connect execute output to memory input
+  .inst_mem_in(inst_exe_out),
+  .inst_mem_out(inst_mem_out)
   // ... other inputs/outputs
 );
 
 write_back_stage write_back_inst (
   .clk(clk),
   .rst(rst),
-  .destination_register(destination_register_processor),
-  .regb_write_enable(regb_write_enable_processor),
-  .data_in(alu_result_processor) // Connect memory output to write-back input
-  // TODO it could be also that the data in receives from memory_inst.data_out
+  .inst_wb_in(inst_mem_out) // what is it? it could be both the ALU's output and the memory load
 );
 
 // Connect pipeline stages
