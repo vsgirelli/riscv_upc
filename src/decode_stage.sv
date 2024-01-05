@@ -2,7 +2,8 @@ module decode_stage (
   input logic clk,
   input logic rst,
   input inst_fetched_t inst_fetched_in,
-  output inst_decoded_t inst_dec_out
+  output inst_decoded_t inst_dec_out,
+  input inst_decoded_t inst_wb_in
   // ... other input/output ports
 );
 logic alu_op; 
