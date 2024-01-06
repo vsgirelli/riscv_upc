@@ -18,7 +18,7 @@ logic [31:0] regb_write_enable_processor;
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
-  .instruction(instruction_fetched)
+  .instruction_out(instruction_fetched)
   // ... other inputs/outputs
 );
 
