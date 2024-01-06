@@ -1,24 +1,46 @@
 module decode_stage (
   input logic clk,
   input logic rst,
-  input inst_fetched_t inst_fetched_in,
+
+  // instructions in and out of stage
+  input [ILEN-1:0] inst_fetched_in,
   output inst_decoded_t inst_dec_out,
-  input inst_decoded_t inst_wb_in
+  input inst_decoded_t inst_wb_in,
+
+  // stalls
+  output logic stall_dec_out,
+
+  // forwards
+  input inst_decoded_t exe_bypass,
+  input inst_decoded_t mem_bypass
   // ... other input/output ports
 );
-logic alu_op; 
-// Some decoding logic
-always @(posedge clk or negedge rst) begin
-  if (!rst) begin
-    // Reset logic
-    // ... other reset actions
-  //end else begin
-    // Decode the alu_op from the instruction
-    //alu_op <= instruction[31:25];// TODO
-  end
 
-end
+logic [$clog2(REG_FILE_LEN)-1:0] src_reg_1; 
+logic [$clog2(REG_FILE_LEN)-1:0] src_reg_2; 
+logic [$clog2(REG_FILE_LEN)-1:0] dst_reg; 
 
-//Usethedecodedinformationtgenerate  control  signals  or    perform    other    tasks
+
+// Decoding instruction fields // TODO just based on their code to implement the bypass logic
+assign opcode    = inst_fetched_in[0:6];
+assign src_reg_1 = opcode == 7'h37 ? 0 : inst_fetched_in[19:15];
+assign src_reg_2 = inst_fetched_in[24:20];
+assign dst_reg   = inst_fetched_in[11:7];
+
+assign inst_dec_out.valid       = instruction_i.valid & ~dependency;
+assign inst_dec_out.is_reg_reg  = opcode == 7'h33 ? inst_dec_out.valid : 0;
+assign inst_dec_out.is_load     = opcode == 7'h03 ? inst_dec_out.valid : 0;
+assign inst_dec_out.is_store    = opcode == 7'h23 ? inst_dec_out.valid : 0;
+assign inst_dec_out.is_mul      = opcode == 7'h33 ? inst_dec_out.valid : 0;
+//assign inst_dec_out.isBr  = opcode == 7'h63 ? inst_dec_out.valid : 0;
+//assign inst_dec_out.isRrw = opcode == 7'h3b ? inst_dec_out.valid : 0;
+//assign inst_dec_out.isIm  = opcode == 7'h13 | opcode == 7'h37 ? inst_dec_out.valid : 0;
+//assign inst_dec_out.isSys = opcode == 7'h73 ? inst_dec_out.valid : 0;
+  
+// Verifying dependency between inst_dec.src_data_1/src_data_2 and inst_exe.dst_reg
+assign dep_src1_exe = exe_bypass.valid & exe_bypass.reg_write_enable & (src_reg_1 == exe_bypass.dst_reg); 
+assign dep_src2_exe = exe_bypass.valid & exe_bypass.reg_write_enable & (src_reg_2 == exe_bypass.dst_reg);
+assign dep_dst_exe  = exe_bypass.valid & exe_bypass.reg_write_enable & (dst_reg   == exe_bypass.dst_reg); 
+
 
 endmodule

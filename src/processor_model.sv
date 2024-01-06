@@ -21,32 +21,43 @@ logic stall_fet,     stall_dec,     stall_exe,     stall_mul,     stall_mem;
 // Backward stalls
 logic stall_fet_out, stall_dec_out, stall_exe_out, stall_mul_out, stall_mem_out;
 
-// TODO check if is stall
-assign inst_dec = inst_fetched_out;
-assign inst_exe = inst_dec_out;
-assign inst_mul = inst_dec_out;
-assign inst_mem = inst_exe_out;
+// to stall is to have the same input:
+// inst_x = inst_x
+
+if stall_dec_out
+
+
+always_ff @(posedge clk) begin
+  inst_dec = inst_dec_next; // either I stall, or I get inst_fetched_out
+  inst_exe = inst_exe_next; // stall or inst_dec_out
+  inst_mul = inst_mul_next; // stall or inst_dec_out
+  inst_mem = inst_mem_next; // stall, or inst_exe_out, or inst_mul_out
+end
 
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
-  .inst_fetched_out(inst_fetched_out)
+  .inst_fetched_out(inst_fetched_out),
+  .stall_fet_in(stall_fet)
   // ... other inputs/outputs
 );
 
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
-  .inst_fetched_in(inst_dec), // either I stall, or I get inst_fetched_out
+  .inst_fetched_in(inst_dec),
   .inst_dec_out(inst_dec_out),
-  .inst_wb_in(inst_wb)
+  .inst_wb_in(inst_wb),
+  .stall_dec_out(stall_dec_out),
+  .exe_bypass(inst_exe_out), // current EXE instruction
+  .mem_bypass(inst_mem_out)  // current MEM instruction
   // ... other inputs/outputs
 );
 
 execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
-  .inst_exe_in(inst_exe), // stall or inst_dec_out
+  .inst_exe_in(inst_exe),
   .inst_exe_out(inst_exe_out)
   // ... other inputs/outputs
 );
@@ -54,15 +65,17 @@ execute_stage execute_inst (
 pipelined_multiplier multiplier_inst (
   .clk(clk),
   .rst(rst),
-  .inst_mul_in(inst_mul), // stall or inst_dec_out
+  .inst_mul_in(inst_mul),
   .inst_mul_out(inst_mul_out)
 );
 
 memory_stage memory_inst (
   .clk(clk),
   .rst(rst),
-  .inst_mem_in(inst_mem), // stall, or inst_exe_out, or inst_mul_out
-  .inst_mem_out(inst_mem_out)
+  .inst_mem_in(inst_mem),
+  .inst_mem_out(inst_mem_out),
+  .stall_mem_in(stall_mem),
+  .stall_mem_out(stall_mem_out)
   // ... other inputs/outputs
 );
 

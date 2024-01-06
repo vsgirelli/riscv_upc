@@ -4,7 +4,8 @@ import instruction_pkg::*;
 module fetch_stage (
   input logic clk,
   input logic rst,
-  output inst_fetched_t inst_fetched_out
+  output inst_fetched_t inst_fetched_out,
+  input logic stall_fet_in
 );
 
 reg [31:0] program_counter;
