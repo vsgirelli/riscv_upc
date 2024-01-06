@@ -1,12 +1,9 @@
 package instruction_pkg;
 
   typedef struct {
-    logic [INST_LEN-1:0] inst;
-  } inst_fetched_t;
-
-  typedef struct {
     // TODO remember about graduation list or whatever
     // to assign to the instruction an ID
+    logic valid;
 
     logic [ARCH_LEN-1:0] src_data_1; // this is data from reg
     logic [ARCH_LEN-1:0] src_data_2; // this is either data from register or immediate
@@ -17,6 +14,7 @@ package instruction_pkg;
                           // but for M instructions only on stage WB
 
     // TODO add func3 and func7
+    logic [2:0] func3;
     logic is_load;
     logic is_store;
     logic is_reg_reg;
