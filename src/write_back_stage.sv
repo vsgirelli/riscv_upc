@@ -1,4 +1,4 @@
-import config_pkg::*;
+import constants_pkg::*;
 import instruction_pkg::*;
 
 module write_back_stage (

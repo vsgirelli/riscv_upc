@@ -1,4 +1,4 @@
-import config_pkg::*;
+import constants_pkg::*;
 import instruction_pkg::*;
 
 module execute_stage (
@@ -8,7 +8,7 @@ module execute_stage (
   output inst_decoded_t inst_exe_out
 );
 
-inst_exe_out = inst_exe_in;
+assign inst_exe_out = inst_exe_in;
 /*alu alu_inst (
   .operand1(operand1),
   .operand2(operand2),

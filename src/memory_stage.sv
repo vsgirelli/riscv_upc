@@ -1,4 +1,4 @@
-import config_pkg::*;
+import constants_pkg::*;
 import instruction_pkg::*;
 
 module memory_stage (
@@ -12,6 +12,6 @@ module memory_stage (
 // Assuming a simple memory with read and write ports
 reg [31:0] memory [0:1023]; // 1024 words of 32 bits each
 
-inst_dec_out = inst_mem_in;
+assign inst_mem_out = inst_mem_in;
 
 endmodule
