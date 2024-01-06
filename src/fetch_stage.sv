@@ -1,11 +1,15 @@
+<<<<<<< HEAD
 import constants_pkg::*;
+import config_pkg::*;
+import instruction_pkg::*;
 
 module fetch_stage (
   input wire clk,
   input wire rst,
-  output wire [ILEN-1:0] instruction_out,
+  output inst_fetched_t inst_fetched_out,
 
   input logic stall_i
+
 );
 
 reg [XLEN-1:0] program_counter;
@@ -17,7 +21,7 @@ logic [7:0] temp_mem [1024:0];
 initial
     $readmemh("instruction_memory.hex", temp_mem);
 
-assign instruction_out = instruction_fetched;
+assign inst_fetched__out = instruction_fetched;
 
 always_comb begin
 
@@ -37,6 +41,11 @@ end
 
 always_ff @(posedge clk) begin
 	program_counter = nxtPC;
+=======
+always @(posedge clk or posedge rst) begin
+  if (rst) begin
+  end
+>>>>>>> 158e5b294fb86aeac8bbe78adadaf0e668ab5e92
 end
 
 endmodule
