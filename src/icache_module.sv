@@ -25,6 +25,17 @@ logic [ICLLEN-1:0]  nextData  [0:ICLN-1];
 logic [tagBits-1:0] nextTags  [0:ICLN-1];
 logic               nextValid [0:ICLN-1];
 
+logic [ICLLEN-1:0]  selectedData;
+logic [tagBits-1:0] selectedTag;
+logic               selectedValid;
+
+assign instr_data = selectedData;
+
+logic [indexBits-1:0] i_index = addr[indexBits+offsetBits-1:offsetBits]; // index coming from address
+
+logic is_hit;
+
+assign miss = ~is_hit;
 
 // Logic to calculate and set each cache line
 genvar i;
@@ -53,6 +64,16 @@ generate
     end
 end
 
+always_comb begin
+    selectedTag = tags[i_index];
+    selectedData = data[i_index];
+    selectedValid = valid[i_index];
+
+    is_hit = selectedValid && selectedTag == addr[31:31-tagBits];
+end
+
 
 typedef enum {IDLE, MEM} cache_state_t;
+cache_state_t state, nextState;
 
+endmodule
