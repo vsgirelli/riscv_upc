@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import constants_pkg::*;
 import config_pkg::*;
 import instruction_pkg::*;
@@ -34,18 +33,13 @@ always_comb begin
     
     if(rst) begin
         instruction_fetched <= {ILEN{1'b0}};
-        nxtPC <= BOOT_ADDR;
+        nxtPC <= 32'h0000; // BOOT_ADDR;
 	 end
 
 end
 
 always_ff @(posedge clk) begin
 	program_counter = nxtPC;
-=======
-always @(posedge clk or posedge rst) begin
-  if (rst) begin
-  end
->>>>>>> 158e5b294fb86aeac8bbe78adadaf0e668ab5e92
 end
 
 endmodule
