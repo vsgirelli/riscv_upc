@@ -18,9 +18,14 @@ module decode_stage (
   input inst_decoded_t mem_bypass
 );
 
+// check if inst_wb_in writes into register_file and sets write enable
+logic reg_write_enable;
+assign reg_write_enable = (inst_wb_in.valid & inst_wb_in.reg_write_enable & inst_wb_in.reg_data_ready);
+
 logic hazard;
 assign stall_dec_out = hazard;
 
+// to read from register_file
 logic [$clog2(REG_FILE_LEN)-1:0] src_reg_1; 
 logic [ARCH_LEN-1:0] src_data_1;
 logic [$clog2(REG_FILE_LEN)-1:0] src_reg_2; 
@@ -44,7 +49,23 @@ assign inst_dec_out.is_mul     = opcode == 7'h33 ? 1 : 0;
 //assign inst_dec_out.isIm  = opcode == 7'h13 | opcode == 7'h37 ? inst_dec_out.valid : 0;
 //assign inst_dec_out.isSys = opcode == 7'h73 ? inst_dec_out.valid : 0;
   
-// TODO reg file
+register_file reg_file (
+  .clk(clk),
+  .rst(rst),
+
+  // requested data 1
+  .src_reg_1(src_reg_1), // src reg 1 decoded from inst
+  .src_data_1(src_data_1),
+  // requested data 2
+  .src_reg_2(src_reg_2), // src reg 2 decoded from inst
+  .src_data_2(src_data_2),
+
+  // write data from inst_wb_in if reg_write_enable
+  .dst_reg(inst_wb_in.dst_reg), // dst register
+  .dst_reg_data(inst_wb_in.dst_reg_data), // data to be written
+  .reg_write_enable(reg_write_enable)
+);
+
 assign inst_dec_out.dst_reg    = dst_reg;
 assign inst_dec_out.func3      = func3;
 assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
@@ -107,7 +128,8 @@ end
 
 // If there was one of the hazards and it wasn't solved above
 // (basically because the data wasn't readdy - ~reg_data_ready)
-// the hazard flag is set and we need to stall
+// the hazard flag is set and we need to stall and inst_dec_out.valid is set
+// to zero (TODO solve it)
 assign hazard = m_hazard | e_hazard;
 
 endmodule
