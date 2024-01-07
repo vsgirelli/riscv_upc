@@ -76,6 +76,8 @@ always_comb begin
     // If there's no hazards, just use register file data
     inst_dec_out.src_data_1 = src_data_1;
     inst_dec_out.src_data_2 = src_data_2;
+    m_hazard = 0;
+    e_hazard = 0;
   
   end else begin
 
