@@ -1,4 +1,4 @@
-import config_pkg::*;
+import constants_pkg::*;
 import instruction_pkg::*;
 
 module execute_stage (
@@ -8,14 +8,7 @@ module execute_stage (
   output inst_decoded_t inst_exe_out
 );
 
-always @(posedge clk or posedge rst) begin
-  if (rst) begin
-    // Reset logic
-    // ... other reset actions
-    // ... other execute logic
-  end
-end
-
+assign inst_exe_out = inst_exe_in;
 /*alu alu_inst (
   .operand1(operand1),
   .operand2(operand2),
