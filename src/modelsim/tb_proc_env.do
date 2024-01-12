@@ -1,2 +1,2 @@
-source all.do
-run 15us
+source initial.do
+run 20ns

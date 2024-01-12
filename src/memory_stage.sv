@@ -13,6 +13,8 @@ module memory_stage (
 reg [31:0] memory [0:1023]; // 1024 words of 32 bits each
 
 assign inst_mem_out = inst_mem_in;
+assign stall_mem_out = 0; // TODO
+
 // TODO if cache miss set inst_mem_out.reg_data_ready = 0
 // because this bit is checked at the decode stage when we check the bypasses
 // and check what to do with the stall_mem_out
