@@ -38,7 +38,9 @@ generate
     // need to have the always_comb and a backup register_file to be able 
     // to verify the reg_write_enable signal before writing into the final register_file
     always_comb begin
-      if (reg_write_enable && dst_reg == i) bckp_regs[i] = dst_reg_data;
+      if (rst)
+         bckp_regs[i] = {ARCH_LEN{1'b0}}; 
+      else if (reg_write_enable && dst_reg == i) bckp_regs[i] = dst_reg_data;
       // this needs to be in the for loop because otherwise it conflicts with
       // the register 0
     end
