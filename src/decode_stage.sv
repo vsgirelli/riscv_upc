@@ -37,7 +37,7 @@ logic [$clog2(REG_FILE_LEN)-1:0] dst_reg;
 
 // immediate value
 logic [ARCH_LEN-1:0] imm;
-logic is_r, is_i, is_u, is_s, is_b;
+logic is_r, is_i, is_u, is_s, is_b, is_j;
 
 // Decoding instruction fields // TODO just based on their code to implement the bypass logic
 always_comb begin
@@ -47,6 +47,7 @@ always_comb begin
     src_reg_1 = inst_fetched_in[19:15];
     src_reg_2 = inst_fetched_in[24:20];
 
+    is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND
     is_i = opcode == 7'b0010011 |  // ADDI, SLTI, SLTIU, XORI, ORI
            opcode == 7'b0000011 |  // LB, LH, LW, LBU, LHU
            opcode == 7'b1100111;   // JALR
@@ -62,8 +63,11 @@ end
   
 // Immediate calculation logic
 always_comb begin
-
     if(is_i) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:20]};
+    if(is_s) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:25], inst_fetched_in[11:8], inst_fetched_in[7]};
+    if(is_b) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[7], inst_fetched_in[31:25], inst_fetched_in[11:8], 1'b0};
+    if(is_u) imm = {inst_fetched_in[31], inst_fetched_in[30:20], inst_fetched_in[19:12], 12'b0};
+    if(is_j) imm = {{ARCH_LEN-20{inst_fethed_in[31]}}, inst_fethced_in[19:12], inst_fetched_in[20], inst_fetched_in[30:25], inst_fetched_in[24:21], 1'b0};
 end
 
 register_file reg_file (
