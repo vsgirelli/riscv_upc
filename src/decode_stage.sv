@@ -24,6 +24,7 @@ assign reg_write_enable = (inst_wb_in.valid & inst_wb_in.reg_write_enable & inst
 
 logic [6:0] opcode;
 logic [2:0] func3;
+logic [6:0] func7;
 
 logic hazard;
 assign stall_dec_out = hazard;
@@ -44,6 +45,7 @@ always_comb begin
     opcode    = inst_fetched_in[6:0];
     dst_reg   = inst_fetched_in[11:7];
     func3     = inst_fetched_in[14:12];
+    func7     = inst_fetched_in[31:25];
     src_reg_1 = inst_fetched_in[19:15];
     src_reg_2 = inst_fetched_in[24:20];
 
@@ -59,15 +61,18 @@ always_comb begin
 
     is_b = opcode == 7'b1100011;   // BXXx
 
+    is_j = 0;
+
 end
   
 // Immediate calculation logic
 always_comb begin
     if(is_i) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:20]};
-    if(is_s) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:25], inst_fetched_in[11:8], inst_fetched_in[7]};
-    if(is_b) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[7], inst_fetched_in[31:25], inst_fetched_in[11:8], 1'b0};
-    if(is_u) imm = {inst_fetched_in[31], inst_fetched_in[30:20], inst_fetched_in[19:12], 12'b0};
-    if(is_j) imm = {{ARCH_LEN-20{inst_fethed_in[31]}}, inst_fethced_in[19:12], inst_fetched_in[20], inst_fetched_in[30:25], inst_fetched_in[24:21], 1'b0};
+    else if(is_s) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:25], inst_fetched_in[11:8], inst_fetched_in[7]};
+    else if(is_b) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[7], inst_fetched_in[31:25], inst_fetched_in[11:8], 1'b0};
+    else if(is_u) imm = {inst_fetched_in[31], inst_fetched_in[30:20], inst_fetched_in[19:12], 12'b0};
+    else if(is_j) imm = {{ARCH_LEN-20{inst_fetched_in[31]}}, inst_fetched_in[19:12], inst_fetched_in[20], inst_fetched_in[30:25], inst_fetched_in[24:21], 1'b0};
+    else imm = '0;
 end
 
 register_file reg_file (
@@ -105,6 +110,7 @@ assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
 assign inst_dec_out.reg_write_enable = inst_dec_out.is_load | inst_dec_out.is_reg_reg | inst_dec_out.is_mul; // TODO do we add a dependency check here? not in the way I'm thinking about this field. MC: I would leave it simple here, like only checking if it writes to regfile
 assign inst_dec_out.reg_data_ready   = 0;
 assign inst_dec_out.immediate = imm;
+assign inst_dec_out.func7     = func7;
 
 // Verifying hazard between inst_dec.src_data_1/src_data_2 and inst_exe.dst_reg
 // The flag reg_write_enable guarantees that is a is_reg_reg inst executing on the execute_stage
