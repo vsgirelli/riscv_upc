@@ -15,6 +15,11 @@ inst_decoded_t       inst_exe, inst_exe_next, inst_exe_out;     // execute_stage
 inst_decoded_t       inst_mul, inst_mul_next, inst_mul_out;     // pipelined_multiplier
 inst_decoded_t       inst_mem, inst_mem_next, inst_mem_out;     // memory_stage
 inst_decoded_t       inst_wb,  inst_wb_next;                    // write_back_stage
+// For all this control signals that travel throught the pipeline,
+// it would be great to create specific structs for each one, so we don't
+// carry useless signals. Like doinv a specific "decoupling_control_dec_exe"
+// for example.
+
 
 // Stalls
 logic stall_fet,     stall_dec,     stall_exe,     stall_mul,     stall_mem;
