@@ -49,7 +49,7 @@ always_comb begin
     src_reg_1 = inst_fetched_in[19:15];
     src_reg_2 = inst_fetched_in[24:20];
 
-    is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND
+    is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND, MUL
     is_i = opcode == 7'b0010011 |  // ADDI, SLTI, SLTIU, XORI, ORI
            opcode == 7'b0000011 |  // LB, LH, LW, LBU, LHU
            opcode == 7'b1100111;   // JALR
@@ -107,7 +107,7 @@ end
 assign inst_dec_out.dst_reg    = dst_reg;
 assign inst_dec_out.func3      = func3;
 assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
-assign inst_dec_out.reg_write_enable = inst_dec_out.is_load | inst_dec_out.is_reg_reg | inst_dec_out.is_mul; // TODO do we add a dependency check here? not in the way I'm thinking about this field. MC: I would leave it simple here, like only checking if it writes to regfile
+assign inst_dec_out.reg_write_enable = is_r | is_i | is_u; // TODO do we add a dependency check here? not in the way I'm thinking about this field. MC: I would leave it simple here, like only checking if it writes to regfile
 assign inst_dec_out.reg_data_ready   = 0;
 assign inst_dec_out.immediate = imm;
 assign inst_dec_out.func7     = func7;
@@ -133,15 +133,7 @@ always_comb begin
   m_hazard = mem_hazard;
   e_hazard = exe_hazard;
   
-  if (~exe_hazard & ~mem_hazard) begin
-    // If there's no hazards, just use register file data
-    inst_dec_out.src_data_1 = src_data_1;
-    inst_dec_out.src_data_2 = src_data_2;
-    m_hazard = 0;
-    e_hazard = 0;
-  
-  end else begin
-
+  if (exe_hazard | mem_hazard) begin
     if (mem_hazard & mem_bypass.reg_data_ready) begin
       if (dep_src1_mem) inst_dec_out.src_data_1 = mem_bypass.dst_reg_data;
       if (dep_src2_mem) inst_dec_out.src_data_2 = mem_bypass.dst_reg_data;
@@ -163,6 +155,14 @@ always_comb begin
       end
        
     end
+  
+  end else begin
+    // If there's no hazards, just use register file data
+    inst_dec_out.src_data_1 = src_data_1;
+    inst_dec_out.src_data_2 = src_data_2;
+    m_hazard = 0;
+    e_hazard = 0;
+
   end
 end
 
