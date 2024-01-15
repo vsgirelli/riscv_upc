@@ -1,8 +1,8 @@
 // ALU module
+import constants_pkg::*;
 
 module alu #(parameter WIDTH = 32)(
   input wire clk,               // Clock input
-  input wire rst,               // Reset input
   input wire [31:0] operand1,   // 32-bit input operand operand1
   input wire [31:0] operand2,   // 32-bit input operand operand2
   input wire [2:0] alu_op3,       // 3-bit func3 
@@ -57,7 +57,7 @@ always_comb  begin
       3'b111: result = sA & sB; // AND
 
       // Add more operations as needed (e.g., SLT, SLTU, SLL, SRL, SRA) TODO
-      default: alu_result = 32'h0; // Default to zero for unknown operations
+      default: result = 32'h0; // Default to zero for unknown operations
     endcase
 
     // Set flags based on the result

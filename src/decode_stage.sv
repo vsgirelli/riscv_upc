@@ -112,6 +112,13 @@ assign inst_dec_out.reg_data_ready   = 0;
 assign inst_dec_out.immediate = imm;
 assign inst_dec_out.func7     = func7;
 
+assign inst_dec_out.is_r      = is_r;
+assign inst_dec_out.is_i      = is_i;
+assign inst_dec_out.is_s      = is_s;
+assign inst_dec_out.is_u      = is_u;
+assign inst_dec_out.is_b      = is_b;
+assign inst_dec_out.is_j      = is_j;
+
 // Verifying hazard between inst_dec.src_data_1/src_data_2 and inst_exe.dst_reg
 // The flag reg_write_enable guarantees that is a is_reg_reg inst executing on the execute_stage
 assign dep_src1_exe = exe_bypass.valid & exe_bypass.reg_write_enable & (src_reg_1 == exe_bypass.dst_reg); 

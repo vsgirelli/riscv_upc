@@ -23,7 +23,8 @@ package instruction_pkg;
     logic is_mul;
     
     logic [ARCH_LEN-1:0] immediate; // The immediate value
-    // is immediate??
+    
+    logic is_i, is_r, is_u, is_s, is_b, is_j; //instruction type
 
   } inst_decoded_t;
 
