@@ -38,6 +38,7 @@ always_comb begin
   inst_exe_next = (stall_exe ? inst_exe : inst_dec_out);
   // TODO mul?
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
+  inst_wb_next  = inst_mem_out;
 end
 
 always_ff @(posedge clk) begin
@@ -45,6 +46,7 @@ always_ff @(posedge clk) begin
   inst_exe = inst_exe_next; // stall or inst_dec_out
   inst_mul = inst_mul_next; // stall or inst_dec_out
   inst_mem = inst_mem_next; // stall, or inst_exe_out, or inst_mul_out
+  inst_wb  = inst_wb_next;
 end
 
 fetch_stage fetch_inst (

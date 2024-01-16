@@ -49,7 +49,7 @@ always_comb begin
     src_reg_1 = inst_fetched_in[19:15];
     src_reg_2 = inst_fetched_in[24:20];
 
-    is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND, MUL
+    is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND, MUL*, DIV*
     is_i = opcode == 7'b0010011 |  // ADDI, SLTI, SLTIU, XORI, ORI
            opcode == 7'b0000011 |  // LB, LH, LW, LBU, LHU
            opcode == 7'b1100111;   // JALR
@@ -97,7 +97,7 @@ always_comb begin
     inst_dec_out.is_load    = opcode == 7'h03 ? 1 : 0;
     inst_dec_out.is_store   = opcode == 7'h23 ? 1 : 0;
     inst_dec_out.is_reg_reg = opcode == 7'h33 ? 1 : 0;
-    inst_dec_out.is_mul     = opcode == 7'h33 ? 1 : 0;
+    inst_dec_out.is_mul     = is_r & func7[0]; //opcode == 7'h33 ? 1 : 0;
 //assign inst_dec_out.isBr  = opcode == 7'h63 ? inst_dec_out.valid : 0;
 //assign inst_dec_out.isRrw = opcode == 7'h3b ? inst_dec_out.valid : 0;
 //assign inst_dec_out.isIm  = opcode == 7'h13 | opcode == 7'h37 ? inst_dec_out.valid : 0;
