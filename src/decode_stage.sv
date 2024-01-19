@@ -72,6 +72,13 @@ assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
 assign inst_dec_out.reg_write_enable = inst_dec_out.is_load | inst_dec_out.is_reg_reg | inst_dec_out.is_mul; // TODO do we add a dependency check here? not in the way I'm thinking about this field
 assign inst_dec_out.reg_data_ready   = 0;
 
+// TODO there is also dependency if the exe_bypass is a load and the current
+  // instruction is using the loaded value (load.to.use), which will have
+  // to sall for one cycle because bypassing doesn't work (the processor
+  // updated)
+  // TODO what if there's a load s1 . . followed by a store s1 . .?
+    // (slide 34 of extended processor)
+
 // Verifying hazard between inst_dec.src_data_1/src_data_2 and inst_exe.dst_reg
 // The flag reg_write_enable guarantees that is a is_reg_reg inst executing on the execute_stage
 assign dep_src1_exe = exe_bypass.valid & exe_bypass.reg_write_enable & (src_reg_1 == exe_bypass.dst_reg); 
