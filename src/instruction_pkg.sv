@@ -1,4 +1,6 @@
+
 package instruction_pkg;
+  import constants_pkg::*;
 
   typedef struct {
     // TODO remember about graduation list or whatever
@@ -13,13 +15,16 @@ package instruction_pkg;
     logic reg_data_ready; // for R instructions data is ready on stage EXE
                           // but for M instructions only on stage WB
 
-    // TODO add func3 and func7
     logic [2:0] func3;
+    logic [6:0] func7;
     logic is_load;
     logic is_store;
     logic is_reg_reg;
     logic is_mul;
-    // is immediate??
+    
+    logic [ARCH_LEN-1:0] immediate; // The immediate value
+    
+    logic is_i, is_r, is_u, is_s, is_b, is_j; //instruction type
 
   } inst_decoded_t;
 

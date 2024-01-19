@@ -1,3 +1,6 @@
+import instruction_pkg::*;
+import constants_pkg::*;
+
 // Artificial 5-stage multiplier
 module pipelined_multiplier (
   input logic clk,
