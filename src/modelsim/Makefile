@@ -1,5 +1,5 @@
 
-SVFILES=constants_pkg.sv instruction_pkg.sv alu.sv decode_stage.sv execute_stage.sv fetch_stage.sv icache_module.sv memory_stage.sv pipelined_multiplier.sv register_file.sv write_back_stage.sv processor_model.sv tb_proc.sv 
+SVFILES=constants_pkg.sv structure_pkg.sv alu.sv decode_stage.sv execute_stage.sv fetch_stage.sv icache_module.sv memory_stage.sv pipelined_multiplier.sv register_file.sv hazard_module.sv processor_model.sv tb_proc.sv 
 
 
 VLOG_FILES=$(patsubst %.sv, %_vlog, $(SVFILES))

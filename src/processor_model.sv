@@ -1,5 +1,5 @@
 import constants_pkg::*;
-import instruction_pkg::*;
+import structure_pkg::*;
 
 // top_level_module.v
 module processor_model (
@@ -20,25 +20,27 @@ inst_decoded_t       inst_wb,  inst_wb_next;                    // write_back_st
 // carry useless signals. Like doinv a specific "decoupling_control_dec_exe"
 // for example.
 
+// bypass signals
+bypass_t exe_bypass, mem_bypass, ltu_bypass;
 
 // Stalls
 logic stall_fet,     stall_dec,     stall_exe,     stall_mul,     stall_mem;
 // Backward stalls
 logic stall_fet_out, stall_dec_out, stall_exe_out, stall_mul_out, stall_mem_out;
 
-assign stall_mem = stall_mem_out;
-assign stall_exe = stall_mem;
-assign stall_dec = (stall_exe | stall_dec_out);
-assign stall_fet = stall_dec;
+// simply propagate backwards the stall signals
+assign stall_mem = stall_mem_out; // in case of dcache miss
+assign stall_exe = stall_mem; // backward stall from mem
+assign stall_dec = (stall_exe | stall_dec_out); // backward stall from exe or decode load to use hazard
+assign stall_fet = (stall_dec | stall_fet_out); // backward stall from decode or icache miss
 
+// stall logic
 always_comb begin
-  // to stall is to have the same input:
-  // inst_x = inst_x
   inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
   inst_exe_next = (stall_exe ? inst_exe : inst_dec_out);
-  // TODO mul?
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
-  inst_wb_next  = inst_mem_out;
+  inst_wb_next  = (~(inst_mem_out.valid & inst_mem_out.reg_data_ready) ? inst_wb :  inst_mem_out);
+  // TODO mul?
 end
 
 always_ff @(posedge clk) begin
@@ -49,11 +51,24 @@ always_ff @(posedge clk) begin
   inst_wb  = inst_wb_next;
 end
 
+hazard_module hazards (
+  .clk(clk),
+  .rst(rst),
+  .inst_dec_out(inst_dec_out),
+  .inst_exe_out(inst_exe_out), 
+  .inst_mem_out(inst_mem_out),
+  .exe_bypass(exe_bypass),
+  .mem_bypass(mem_bypass),
+  .ltu_bypass(ltu_bypass),
+  .load_to_use_hazard(stall_dec_out)
+);
+
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
   .inst_fetched_out(inst_fetched_out),
   .stall_fet_in(stall_fet)
+  //.stall_fet_out(stall_fet_out)
 );
 
 decode_stage decode_inst (
@@ -62,9 +77,11 @@ decode_stage decode_inst (
   .inst_fetched_in(inst_dec),
   .inst_dec_out(inst_dec_out),
   .inst_wb_in(inst_wb),
-  .stall_dec_out(stall_dec_out),
-  .exe_bypass(inst_exe_out), // current EXE instruction
-  .mem_bypass(inst_mem_out)  // current MEM instruction
+  .stall_dec(stall_dec),
+  .inst_exe_out(inst_exe_out), // current EXE instruction
+  .exe_bypass(exe_bypass),     // EXE Bypass signals
+  .inst_mem_out(inst_mem_out), // current MEM instruction
+  .mem_bypass(mem_bypass)      // MEM Bypass signals
 );
 
 execute_stage execute_inst (
