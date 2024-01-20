@@ -1,5 +1,5 @@
 import constants_pkg::*;
-import instruction_pkg::*;
+import structure_pkg::*;
 
 module fetch_stage (
   input wire clk,

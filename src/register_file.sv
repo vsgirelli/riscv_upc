@@ -1,5 +1,5 @@
 import constants_pkg::*;
-import instruction_pkg::*;
+import structure_pkg::*;
 
 module register_file (
   input logic clk,
@@ -28,7 +28,7 @@ assign src_data_2 = registers[src_reg_2];
 
 always_comb
   bckp_regs[0] = 0;
-always_ff @(posedge clk)
+always_ff @(posedge ~clk)
   registers[0] = bckp_regs[0];
 
 genvar i;
@@ -46,7 +46,7 @@ generate
     end
 
     // update the final register_file if there were any changes
-    always_ff @(posedge clk) begin
+    always_ff @(posedge ~clk) begin
       registers[i] = bckp_regs[i];
     end
   end

@@ -1,4 +1,4 @@
-import instruction_pkg::*;
+import structure_pkg::*;
 import constants_pkg::*;
 
 // Artificial 5-stage multiplier
