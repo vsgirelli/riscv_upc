@@ -1,5 +1,5 @@
 
-SVFILES = alu.sv execute_stage.sv pipelined_multiplier.sv decode_stage.sv fetch_stage.sv memory_stage.sv ro_bus.sv icache_module.sv main_memory.sv processor_module.sv tb_proc.sv
+SVFILES = alu.sv execute_stage.sv pipelined_multiplier.sv decode_stage.sv hazard_module.sv fetch_stage.sv memory_stage.sv ro_bus.sv icache_module.sv main_memory.sv processor_module.sv tb_proc.sv
 
 .PHONY: $(SVFILES) modelsim
 
