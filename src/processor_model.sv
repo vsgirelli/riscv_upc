@@ -49,11 +49,22 @@ always_ff @(posedge clk) begin
   inst_wb  = inst_wb_next;
 end
 
+instruction_bus ibus();
+
+main_memory mem0 (
+    .clk,
+    .rst,
+
+    .bus(ibus)
+);
+
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
   .inst_fetched_out(inst_fetched_out),
-  .stall_fet_in(stall_fet)
+  .stall_fet_in(stall_fet),
+
+  .ibus(ibus)
 );
 
 decode_stage decode_inst (
