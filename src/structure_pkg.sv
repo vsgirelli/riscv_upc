@@ -20,14 +20,10 @@ package structure_pkg;
 
     logic [2:0] func3;
     logic [6:0] func7;
-    logic is_load;
-    logic is_store;
-    logic is_reg_reg;
-    logic is_mul;
 
     logic [ARCH_LEN-1:0] immediate; // The immediate value
 
-    logic is_i, is_r, is_u, is_s, is_b, is_j; //instruction type
+    logic is_i, is_l, is_r, is_u, is_s, is_b, is_j, is_m; //instruction type
 
   } inst_decoded_t;
 
