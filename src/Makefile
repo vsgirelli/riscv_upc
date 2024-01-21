@@ -1,5 +1,5 @@
 
-SVFILES = alu.sv execute_stage.sv pipelined_multiplier.sv decode_stage.sv fetch_stage.sv memory_stage.sv processor_model.sv write_back_stage.sv tb_proc.sv
+SVFILES = alu.sv execute_stage.sv pipelined_multiplier.sv decode_stage.sv fetch_stage.sv memory_stage.sv ro_bus.sv icache_module.sv main_memory.sv processor_module.sv tb_proc.sv
 
 .PHONY: $(SVFILES) modelsim
 
@@ -13,6 +13,9 @@ $(SVFILES): work
 
 modelsim:
 	$(MAKE) -C modelsim modelsim
+
+modelsim_icache:
+	$(MAKE) -C modelsim modelsim_icache
 
 clean:
 	rm -f *.svg *.png *.dot *.bak 

@@ -4,6 +4,7 @@ package constants_pkg;
     parameter integer ICLLEN = 128; // Instruction cache length of lines in bits
     
     parameter integer ARCH_LEN = 32; // Architectural width (width of int register)
+    parameter integer PHY_LEN = 20; // Physical address width
     parameter integer INST_LEN = 32; // Maximum instruciton length (as in spec)
     parameter integer REG_FILE_LEN = 32;
     
