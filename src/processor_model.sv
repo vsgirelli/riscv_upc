@@ -26,7 +26,8 @@ inst_decoded_t       inst_wb,  inst_wb_next;                    // write_back_st
 // for example.
 
 // bypass signals
-bypass_t exe_bypass, mem_bypass, ltu_bypass;
+bypass_t exe_bypass, mem_bypass;
+logic load_to_use_hazard;
 
 // Stalls
 logic stall_fet,     stall_dec,     stall_exe,     stall_mul,     stall_mem;
@@ -35,16 +36,20 @@ logic stall_fet_out, stall_dec_out, stall_exe_out, stall_mul_out, stall_mem_out;
 
 // simply propagate backwards the stall signals
 assign stall_mem = stall_mem_out; // in case of dcache miss
-assign stall_exe = stall_mem; // backward stall from mem
-assign stall_dec = (stall_exe | stall_dec_out); // backward stall from exe or decode load to use hazard
-assign stall_fet = (stall_dec | stall_fet_out); // backward stall from decode or icache miss
+assign stall_exe = stall_mem;     // backward stall from mem
+assign stall_dec = (stall_exe | load_to_use_hazard); // backward stall from exe or decode load to use hazard
+assign stall_fet = (stall_dec);      // backward stall from decode or (TODO) icache miss
 
 // stall logic
 always_comb begin
+  // TODO what about stall_fet_out
   inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
-  inst_exe_next = (stall_exe ? inst_exe : inst_dec_out);
+  inst_exe_next = (stall_exe ? inst_exe : inst_dec_out); // if load_to_use_hazard, inst_dec_out.valid = 0
+                                                         // we don't "stall" the exe, we run an invalid instruction
+                                                         // that doesn't change the machine state
+                                                         // this is inserting a bubble
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
-  inst_wb_next  = (~(inst_mem_out.valid & inst_mem_out.reg_data_ready) ? inst_wb :  inst_mem_out);
+  inst_wb_next  = (stall_mem ? inst_wb  : inst_mem_out);
   // TODO mul?
 end
 
@@ -73,8 +78,7 @@ hazard_module hazards (
   .inst_mem_out(inst_mem_out),
   .exe_bypass(exe_bypass),
   .mem_bypass(mem_bypass),
-  .ltu_bypass(ltu_bypass),
-  .load_to_use_hazard(stall_dec_out)
+  .load_to_use_hazard(load_to_use_hazard)
 );
 
 fetch_stage fetch_inst (
@@ -94,7 +98,7 @@ decode_stage decode_inst (
   .inst_fetched_in(inst_dec),
   .inst_dec_out(inst_dec_out),
   .inst_wb_in(inst_wb),
-  .stall_dec(stall_dec),
+  .load_to_use_hazard(load_to_use_hazard),
   .inst_exe_out(inst_exe_out), // current EXE instruction
   .exe_bypass(exe_bypass),     // EXE Bypass signals
   .inst_mem_out(inst_mem_out), // current MEM instruction
