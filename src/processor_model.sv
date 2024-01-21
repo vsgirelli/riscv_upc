@@ -82,7 +82,7 @@ fetch_stage fetch_inst (
   .rst(rst),
   .inst_fetched_out(inst_fetched_out),
   .stall_fet_in(stall_fet),
-  .pc_out(pc_fet_out)
+  .pc_out(pc_fet_out),
   .ibus(ibus)
   //.stall_fet_out(stall_fet_out)
 );

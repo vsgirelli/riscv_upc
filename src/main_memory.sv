@@ -16,6 +16,8 @@ always_comb begin
    case(state)
        IDLE: begin 
            if(bus.ldp) nextState = SERVING;
+           else nextState = IDLE;
+           bus.ldData = 128'h0;
            bus.ldr = 0;
        end
        SERVING: begin

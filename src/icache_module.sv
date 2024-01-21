@@ -110,6 +110,10 @@ always_comb begin
                 nextState = MEM;
                 next_addr_buff = addr;
             end
+            else begin
+              next_addr_buff = addr_buff;
+              nextState = IDLE;
+            end
             ibus.ldp = ~is_hit & enable;
         end
         MEM: begin 
@@ -117,6 +121,8 @@ always_comb begin
             if (ibus.ldr) begin
                 nextState = IDLE;
             end
+            else nextState = MEM;
+            next_addr_buff = addr_buff;
             ibus.ldp = 1;
         end
     endcase  
