@@ -13,14 +13,13 @@ module decode_stage (
   input inst_decoded_t inst_wb_in,
 
   // stalls
-  input logic stall_dec,
+  input logic load_to_use_hazard,
 
   // bypasses from EXE and MEM
   input inst_decoded_t inst_exe_out,
   input bypass_t exe_bypass,
   input inst_decoded_t inst_mem_out,
-  input bypass_t mem_bypass,
-  input bypass_t ltu_bypass // load_to_use_hazard signal (bypass from MEM) TODO
+  input bypass_t mem_bypass
 );
 
 // check if inst_wb_in writes into register_file and sets write enable
@@ -40,21 +39,19 @@ logic [$clog2(REG_FILE_LEN)-1:0] dst_reg;
 
 // immediate value
 logic [ARCH_LEN-1:0] imm;
-logic is_r, is_i, is_u, is_s, is_b, is_j;
+logic valid, is_r, is_i, is_l, is_u, is_s, is_b, is_j, is_m;
 
-// Decoding instruction fields // TODO just based on their code to implement the bypass logic
+// Decoding instruction fields
 always_comb begin
-    opcode    = inst_fetched_in[6:0];
-    dst_reg   = inst_fetched_in[11:7];
-    func3     = inst_fetched_in[14:12];
-    func7     = inst_fetched_in[31:25];
-    src_reg_1 = inst_fetched_in[19:15];
-    src_reg_2 = inst_fetched_in[24:20];
+    opcode = inst_fetched_in[6:0];
+    valid  = ~load_to_use_hazard ? 1 : 0;
 
     is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND, MUL*, DIV*
     is_i = opcode == 7'b0010011 |  // ADDI, SLTI, SLTIU, XORI, ORI
            opcode == 7'b0000011 |  // LB, LH, LW, LBU, LHU
            opcode == 7'b1100111;   // JALR
+
+    is_l = opcode == 7'b0000011;
 
     is_s = opcode == 7'b0100011;   // SB, SH, SW
 
@@ -63,8 +60,15 @@ always_comb begin
 
     is_b = opcode == 7'b1100011;   // BXXx
 
+    is_m = is_r & func7[0]; //opcode == 7'h33 ? 1 : 0;
+
     is_j = 0;
 
+    dst_reg   = (~(is_b | is_s) ? inst_fetched_in[11:7] : '0);
+    func3     = inst_fetched_in[14:12];
+    src_reg_1 = inst_fetched_in[19:15];
+    src_reg_2 = (~(is_i) ? inst_fetched_in[24:20] : '0);
+    func7     = inst_fetched_in[31:25];
 end
 
 // Immediate calculation logic
@@ -94,67 +98,49 @@ register_file reg_file (
   .reg_write_enable(reg_write_enable)
 );
 
-always_comb begin
-    inst_dec_out.valid      = ~stall_dec ? 1 : 0; // TODO
-    inst_dec_out.is_load    = opcode == 7'h03 ? 1 : 0;
-    inst_dec_out.is_store   = opcode == 7'h23 ? 1 : 0;
-    inst_dec_out.is_reg_reg = opcode == 7'h33 ? 1 : 0;
-    inst_dec_out.is_mul     = is_r & func7[0]; //opcode == 7'h33 ? 1 : 0;
-//assign inst_dec_out.isBr  = opcode == 7'h63 ? inst_dec_out.valid : 0;
-//assign inst_dec_out.isRrw = opcode == 7'h3b ? inst_dec_out.valid : 0;
-//assign inst_dec_out.isIm  = opcode == 7'h13 | opcode == 7'h37 ? inst_dec_out.valid : 0;
-//assign inst_dec_out.isSys = opcode == 7'h73 ? inst_dec_out.valid : 0;
-end
+assign inst_dec_out.valid      = valid;
+assign inst_dec_out.pc         = pc_in;
 
-assign inst_dec_out.pc        = pc_in;
-assign inst_dec_out.dst_reg   = dst_reg;
-assign inst_dec_out.func3     = func3;
+assign inst_dec_out.src_reg_1  = src_reg_1;
+assign inst_dec_out.src_reg_2  = src_reg_2;
+assign inst_dec_out.dst_reg    = dst_reg;
 assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
 assign inst_dec_out.reg_write_enable = is_r | is_i | is_u;
 assign inst_dec_out.reg_data_ready   = 0;
-assign inst_dec_out.immediate = imm;
-assign inst_dec_out.func7     = func7;
 
-assign inst_dec_out.is_r      = is_r;
-assign inst_dec_out.is_i      = is_i;
-assign inst_dec_out.is_s      = is_s;
-assign inst_dec_out.is_u      = is_u;
-assign inst_dec_out.is_b      = is_b;
-assign inst_dec_out.is_j      = is_j;
+assign inst_dec_out.func3      = func3;
+assign inst_dec_out.func7      = func7;
+assign inst_dec_out.immediate  = imm;
 
+assign inst_dec_out.is_i       = is_i;
+assign inst_dec_out.is_l       = is_l;
+assign inst_dec_out.is_r       = is_r;
+assign inst_dec_out.is_s       = is_s;
+assign inst_dec_out.is_u       = is_u;
+assign inst_dec_out.is_b       = is_b;
+assign inst_dec_out.is_j       = is_j;
+assign inst_dec_out.is_m       = is_m;
 
-// Bypass logic to verify between mem and exe hazards
-// If there's a hazard then perform the data bypasses on inst_dec_out
+// checking the need to perform bypasses
+// if no bypasses, then uses data from reg_file 
 always_comb begin
-
-  if (inst_mem_out.valid) begin
-    if (mem_bypass.dep_src1 & inst_mem_out.reg_data_ready) begin
-      inst_dec_out.src_data_1 = inst_mem_out.dst_reg_data;
-    end
-    if (mem_bypass.dep_src2 & inst_mem_out.reg_data_ready) begin
-      inst_dec_out.src_data_2 = inst_mem_out.dst_reg_data;
-    end
-
-    // If there was a memory hazard that wasn't solved (~reg_data_ready)
-    // we need to kill the mem instruction because it's data is wrong
-    // TODO for now just eliminating hazard
-    // do we? because if there's a miss things will get stalled and the
-      // signals will be solved in the next cycles or when the data is
-      // available
-  end
-
-  // If we have mem_bypass and also exe_bypass, we can override the inst_mem_out
-  // Since the inst_exe_out would override the register in question anyway
-  // (extended processor: 73)
-  if (inst_exe_out.valid) begin
-    if (exe_bypass.dep_src1 & inst_exe_out.reg_data_ready) begin
-      inst_dec_out.src_data_1 = inst_exe_out.dst_reg_data;
-    end
-    if (exe_bypass.dep_src2 & inst_exe_out.reg_data_ready) begin
-      inst_dec_out.src_data_2 = inst_exe_out.dst_reg_data;
-    end
+  if (mem_bypass.dep_src1 & inst_mem_out.reg_data_ready) begin
+    inst_dec_out.src_data_1 = inst_mem_out.dst_reg_data;
+  end else if (exe_bypass.dep_src1 & inst_exe_out.reg_data_ready) begin
+    inst_dec_out.src_data_1 = inst_exe_out.dst_reg_data;
+  end else begin
+    inst_dec_out.src_data_1 = src_data_1;
   end
 end
 
+always_comb begin
+  if (mem_bypass.dep_src2 & inst_mem_out.reg_data_ready) begin
+    inst_dec_out.src_data_2 = inst_mem_out.dst_reg_data;
+  end else if (exe_bypass.dep_src1 & inst_exe_out.reg_data_ready) begin
+    inst_dec_out.src_data_2 = inst_exe_out.dst_reg_data;
+  end else begin
+    inst_dec_out.src_data_2 = (~(is_i) ? src_data_2 : {ARCH_LEN{1'b0}});
+  end
+end
 
 endmodule
