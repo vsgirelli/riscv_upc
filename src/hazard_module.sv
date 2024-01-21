@@ -81,4 +81,44 @@ assign dep_src2_mem = inst_mem_out.valid & inst_mem_out.reg_write_enable & (inst
 assign mem_bypass.dep_src1 = dep_src1_mem;
 assign mem_bypass.dep_src2 = dep_src2_mem;
 
+// Bypass logic to verify between mem and exe hazards
+// If there's a hazard then perform the data bypasses on inst_dec_out
+/*
+logic m_bypass, e_bypass;
+always_comb begin
+  m_bypass = mem_bypass;
+  e_bypass = exe_bypass;
+
+  if (exe_bypass | mem_bypass) begin
+    if (mem_bypass & inst_mem_out.reg_data_ready) begin
+      if (dep_src1_mem) inst_dec_out.src_data_1 = inst_mem_out.dst_reg_data;
+      if (dep_src2_mem) inst_dec_out.src_data_2 = inst_mem_out.dst_reg_data;
+      m_bypass = 0;
+    end
+
+    // If we have mem_bypass and also exe_bypass, we can override the inst_mem_out
+    // Since the inst_exe_out would override the register in question anyway
+    // (extended processor: 73)
+    if (exe_bypass & inst_exe_out.reg_data_ready) begin
+      if (dep_src1_exe) inst_dec_out.src_data_1 = inst_exe_out.dst_reg_data;
+      if (dep_src2_exe) inst_dec_out.src_data_2 = inst_exe_out.dst_reg_data;
+      e_bypass = 0;
+
+      if (mem_bypass) begin
+        // If there was a memory hazard that wasn't solved (~reg_data_ready)
+        // we need to kill the mem instruction because it's data is wrong
+        // TODO for now just eliminating hazard
+        m_bypass = 0;
+      end
+    end
+  end
+end
+*/
+// If there was one of the hazards and it wasn't solved above
+// (basically because the data wasn't readdy - ~reg_data_ready)
+// the hazard flag is set and we need to stall and inst_dec_out.valid is set
+// to zero (TODO solve it)
+// assign hazard = m_bypass | e_bypass;
+//assign hazard = 0;
+
 endmodule
