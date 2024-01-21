@@ -6,6 +6,7 @@ package structure_pkg;
     // TODO remember about graduation list or whatever
     // to assign to the instruction an ID
     logic valid;
+    logic [ARCH_LEN-1:0] pc;
 
     logic [$clog2(REG_FILE_LEN)-1:0] src_reg_1;
     logic [ARCH_LEN-1:0] src_data_1; // this is data from reg 1

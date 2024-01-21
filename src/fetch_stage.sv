@@ -6,12 +6,15 @@ module fetch_stage (
   input wire rst,
   output logic [INST_LEN-1:0] inst_fetched_out,
 
-  input logic stall_fet_in
+  input logic stall_fet_in,
+
+  output logic pc_out
 );
 
 reg [ARCH_LEN-1:0] program_counter;
 
 logic nxtPC;
+assign pc_out = nxtPC;
 
 logic [7:0] temp_mem [1024:0];
 //initial

@@ -5,7 +5,9 @@ module execute_stage (
   input logic clk,
   input logic rst,
   input inst_decoded_t inst_exe_in,
-  output inst_decoded_t inst_exe_out
+  output inst_decoded_t inst_exe_out,
+  output logic kill_exe_out, // branch taken
+  output logic pc_br_tk_out  // branch taken PC address
 );
 
 
@@ -13,17 +15,28 @@ logic [ARCH_LEN-1:0] op1, op2;
 logic [ARCH_LEN-1:0] alu_result;
 
 always_comb begin
+  inst_exe_out = inst_exe_in;
+  if (inst_exe_in.valid) begin
+    if (~inst_exe_in.is_b) begin
 
-    inst_exe_out = inst_exe_in;
+      op1 <= inst_exe_in.src_data_1;
 
-    op1 <= inst_exe_in.src_data_2;
+      if(inst_exe_in.is_i) op2 <= inst_exe_in.immediate;
+      else op2 <= inst_exe_in.src_data_2;
 
-    if(inst_exe_in.is_i) op2 <= inst_exe_in.immediate;
-    else op2 <= inst_exe_in.src_data_2;
+      inst_exe_out.dst_reg_data <= alu_result;
+    inst_exe_out.reg_data_ready <= (inst_exe_in.is_r | inst_exe_in.is_i) & ~(inst_exe_in.is_store | inst_exe_in.is_load);
+  end
+  else begin
+    if (~alu_result) begin
+      pc_br_tk_out = inst_exe_in.pc + inst_exe_in.immediate;
+      kill_exe_out = 1; 
+      inst_exe_out.valid = 0;
+    end
+  end
 
-    inst_exe_out.dst_reg_data <= alu_result;
-    inst_exe_out.reg_data_ready <= (inst_exe_in.is_r | inst_exe_in.is_i | inst_exe_in.is_mul) & ~(inst_exe_in.is_store | inst_exe_in.is_load);
-
+end
+// TODO mul
 end
 
 

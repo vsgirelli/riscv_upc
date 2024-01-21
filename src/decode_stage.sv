@@ -5,6 +5,8 @@ module decode_stage (
   input logic clk,
   input logic rst,
 
+  input logic pc_in, // PC+4 out of fetch_stage to forward and calculate BEQ jump
+
   // instructions in and out of stage
   input logic [INST_LEN-1:0] inst_fetched_in,
   output inst_decoded_t inst_dec_out,
@@ -104,8 +106,9 @@ always_comb begin
 //assign inst_dec_out.isSys = opcode == 7'h73 ? inst_dec_out.valid : 0;
 end
 
-assign inst_dec_out.dst_reg    = dst_reg;
-assign inst_dec_out.func3      = func3;
+assign inst_dec_out.pc        = pc_in;
+assign inst_dec_out.dst_reg   = dst_reg;
+assign inst_dec_out.func3     = func3;
 assign inst_dec_out.dst_reg_data     = {ARCH_LEN{1'b0}};
 assign inst_dec_out.reg_write_enable = is_r | is_i | is_u;
 assign inst_dec_out.reg_data_ready   = 0;

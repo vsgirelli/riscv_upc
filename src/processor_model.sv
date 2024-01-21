@@ -8,6 +8,11 @@ module processor_model (
   // ... other input/output ports
 );
 
+// Branch
+logic pc_fet_out;   // PC+4 out of fetch_stage to forward and calculate BEQ jump
+logic pc_br_tk;     // PC+4+immediate in case of branch taken (from execute_stage)
+logic kill_exe_out; // Branch taken, needs to kill insts
+
 logic [INST_LEN-1:0]                          inst_fetched_out; // fetch_stage
 logic [INST_LEN-1:0] inst_dec, inst_dec_next;                   // decode_stage
 inst_decoded_t                                inst_dec_out;     // decode_stage
@@ -67,13 +72,15 @@ fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
   .inst_fetched_out(inst_fetched_out),
-  .stall_fet_in(stall_fet)
+  .stall_fet_in(stall_fet),
+  .pc_out(pc_fet_out)
   //.stall_fet_out(stall_fet_out)
 );
 
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
+  .pc_in(pc_fet_out),
   .inst_fetched_in(inst_dec),
   .inst_dec_out(inst_dec_out),
   .inst_wb_in(inst_wb),
@@ -88,7 +95,9 @@ execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
   .inst_exe_in(inst_exe),
-  .inst_exe_out(inst_exe_out)
+  .inst_exe_out(inst_exe_out),
+  .kill_exe_out(kill_exe_out),
+  .pc_br_tk_out(pc_br_tk)
 );
 
 pipelined_multiplier multiplier_inst (
