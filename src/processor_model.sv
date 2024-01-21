@@ -56,11 +56,20 @@ always_ff @(posedge clk) begin
   inst_wb  = inst_wb_next;
 end
 
+instruction_bus ibus();
+
+main_memory mem0 (
+    .clk,
+    .rst,
+
+    .bus(ibus)
+);
+
 hazard_module hazards (
   .clk(clk),
   .rst(rst),
   .inst_dec_out(inst_dec_out),
-  .inst_exe_out(inst_exe_out), 
+  .inst_exe_out(inst_exe_out),
   .inst_mem_out(inst_mem_out),
   .exe_bypass(exe_bypass),
   .mem_bypass(mem_bypass),
@@ -74,6 +83,7 @@ fetch_stage fetch_inst (
   .inst_fetched_out(inst_fetched_out),
   .stall_fet_in(stall_fet),
   .pc_out(pc_fet_out)
+  .ibus(ibus)
   //.stall_fet_out(stall_fet_out)
 );
 
