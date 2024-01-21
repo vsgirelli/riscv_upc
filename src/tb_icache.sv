@@ -31,7 +31,8 @@ module tb_icache
       rst <= 0;
   end
 
-  const logic [PHY_LEN-1:0] addr = 20'h0_0010;
+  const logic [PHY_LEN-1:0] addr = 20'h4_0010;
+
   logic out_miss, in_enable;
   logic [INST_LEN-1:0] instruction;
 
@@ -47,12 +48,17 @@ module tb_icache
     .instr_data(instruction),
     .miss(out_miss),
 
-    bus(ibus.consumer)
+    .ibus
   );
 
 assign in_enable = 1;
 
-  // memory_logic
+main_memory mem0 (
+    .clk,
+    .rst,
+
+    .bus(ibus)
+);
 
 endmodule
 
