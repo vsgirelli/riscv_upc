@@ -9,12 +9,12 @@ module processor_model (
 );
 
 // Branch
-logic pc_fet_out;   // PC+4 out of fetch_stage to forward and calculate BEQ jump
-logic pc_br_tk;     // PC+4+immediate in case of branch taken (from execute_stage)
+logic [ARCH_LEN-1:0] pc_fet_out;   // PC+4 out of fetch_stage to forward and calculate BEQ jump
+logic [ARCH_LEN-1:0] pc_br_tk;     // PC+4+immediate in case of branch taken (from execute_stage)
 logic kill_exe_out; // Branch taken, needs to kill insts
 
-logic [INST_LEN-1:0]                          inst_fetched_out; // fetch_stage
-logic [INST_LEN-1:0] inst_dec, inst_dec_next;                   // decode_stage
+inst_fetched_t                                inst_fetched_out; // fetch_stage
+inst_fetched_t       inst_dec, inst_dec_next;                   // decode_stage
 inst_decoded_t                                inst_dec_out;     // decode_stage
 inst_decoded_t       inst_exe, inst_exe_next, inst_exe_out;     // execute_stage
 inst_decoded_t       inst_mul, inst_mul_next, inst_mul_out;     // pipelined_multiplier
@@ -40,10 +40,11 @@ assign stall_exe = stall_mem;     // backward stall from mem
 assign stall_dec = (stall_exe | load_to_use_hazard); // backward stall from exe or decode load to use hazard
 assign stall_fet = (stall_dec);      // backward stall from decode or (TODO) icache miss
 
-// stall logic
 always_comb begin
+  // stall logic
   // TODO what about stall_fet_out
-  inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
+  //inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
+  inst_dec_next = (inst_fetched_out); // TODO for some reason is not starting if i use the line above
   inst_exe_next = (stall_exe ? inst_exe : inst_dec_out); // if load_to_use_hazard, inst_dec_out.valid = 0
                                                          // we don't "stall" the exe, we run an invalid instruction
                                                          // that doesn't change the machine state
@@ -51,6 +52,12 @@ always_comb begin
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
   inst_wb_next  = (stall_mem ? inst_wb  : inst_mem_out);
   // TODO mul?
+
+  // branch logic // there are more things to kill here, check waves, but
+  // branch more or less working
+  if (kill_exe_out) inst_mem_next.valid <= 0;
+  if (kill_exe_out) inst_exe_next.valid <= 0;
+  if (kill_exe_out) inst_dec_next.valid <= 0;
 end
 
 always_ff @(posedge clk) begin
@@ -70,6 +77,7 @@ main_memory mem0 (
     .bus(ibus)
 );
 
+// TODO comment the inputs and outputs of the stages 
 hazard_module hazards (
   .clk(clk),
   .rst(rst),
@@ -86,6 +94,8 @@ fetch_stage fetch_inst (
   .rst(rst),
   .inst_fetched_out(inst_fetched_out),
   .stall_fet_in(stall_fet),
+  .br_tk(kill_exe_out),
+  .pc_br_tk(pc_br_tk),
   .pc_out(pc_fet_out),
   .ibus(ibus)
   //.stall_fet_out(stall_fet_out)

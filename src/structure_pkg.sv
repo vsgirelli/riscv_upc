@@ -3,6 +3,13 @@ package structure_pkg;
   import constants_pkg::*;
 
   typedef struct {
+
+    logic valid;
+    logic [INST_LEN-1:0] inst;
+
+  } inst_fetched_t;
+
+  typedef struct {
     // TODO remember about graduation list or whatever
     // to assign to the instruction an ID
     logic valid;
@@ -28,8 +35,10 @@ package structure_pkg;
   } inst_decoded_t;
 
   typedef struct {
+
     logic dep_src1;
     logic dep_src2;
+  
   } bypass_t;
 
 endpackage

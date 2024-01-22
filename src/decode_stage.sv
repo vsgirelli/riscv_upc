@@ -5,12 +5,12 @@ module decode_stage (
   input logic clk,
   input logic rst,
 
-  input logic pc_in, // PC+4 out of fetch_stage to forward and calculate BEQ jump
+  input logic [ARCH_LEN-1:0] pc_in, // PC+4 out of fetch_stage to forward and calculate BEQ jump
 
   // instructions in and out of stage
-  input logic [INST_LEN-1:0] inst_fetched_in,
+  input  inst_fetched_t inst_fetched_in,
+  input  inst_decoded_t inst_wb_in,
   output inst_decoded_t inst_dec_out,
-  input inst_decoded_t inst_wb_in,
 
   // stalls
   input logic load_to_use_hazard,
@@ -41,10 +41,12 @@ logic [$clog2(REG_FILE_LEN)-1:0] dst_reg;
 logic [ARCH_LEN-1:0] imm;
 logic valid, is_r, is_i, is_l, is_u, is_s, is_b, is_j, is_m;
 
+logic [INST_LEN-1:0] instruction;
+assign instruction = inst_fetched_in.inst;
 // Decoding instruction fields
 always_comb begin
-    opcode = inst_fetched_in[6:0];
-    valid  = ~load_to_use_hazard ? 1 : 0;
+    opcode = instruction[6:0];
+    valid  = (~load_to_use_hazard & inst_fetched_in.valid) ? 1 : 0;
 
     is_r = opcode == 7'b0110011;   // ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND, MUL*, DIV*
     is_i = opcode == 7'b0010011 |  // ADDI, SLTI, SLTIU, XORI, ORI
@@ -64,20 +66,20 @@ always_comb begin
 
     is_j = 0;
 
-    dst_reg   = (~(is_b | is_s) ? inst_fetched_in[11:7] : '0);
-    func3     = inst_fetched_in[14:12];
-    src_reg_1 = inst_fetched_in[19:15];
-    src_reg_2 = (~(is_i) ? inst_fetched_in[24:20] : '0);
-    func7     = inst_fetched_in[31:25];
+    dst_reg   = (~(is_b | is_s) ? instruction[11:7] : '0);
+    func3     = instruction[14:12];
+    src_reg_1 = instruction[19:15];
+    src_reg_2 = (~(is_i) ? instruction[24:20] : '0);
+    func7     = instruction[31:25];
 end
 
 // Immediate calculation logic
 always_comb begin
-    if(is_i) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:20]};
-    else if(is_s) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[31:25], inst_fetched_in[11:8], inst_fetched_in[7]};
-    else if(is_b) imm = {{ARCH_LEN-12{inst_fetched_in[31]}}, inst_fetched_in[7], inst_fetched_in[31:25], inst_fetched_in[11:8], 1'b0};
-    else if(is_u) imm = {inst_fetched_in[31], inst_fetched_in[30:20], inst_fetched_in[19:12], 12'b0};
-    else if(is_j) imm = {{ARCH_LEN-20{inst_fetched_in[31]}}, inst_fetched_in[19:12], inst_fetched_in[20], inst_fetched_in[30:25], inst_fetched_in[24:21], 1'b0};
+    if(is_i) imm = {{ARCH_LEN-12{instruction[31]}}, instruction[31:20]};
+    else if(is_s) imm = {{ARCH_LEN-12{instruction[31]}}, instruction[31:25], instruction[11:8], instruction[7]};
+    else if(is_b) imm = {{ARCH_LEN-12{instruction[31]}}, instruction[7], instruction[31:25], instruction[11:8], 1'b0};
+    else if(is_u) imm = {instruction[31], instruction[30:20], instruction[19:12], 12'b0};
+    else if(is_j) imm = {{ARCH_LEN-20{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:25], instruction[24:21], 1'b0};
     else imm = '0;
 end
 

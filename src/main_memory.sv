@@ -8,11 +8,11 @@ module main_memory (
 );
 
 typedef enum {IDLE, SERVING} tb_state_t;
-tb_state_t state, nextState;      //     sw      add       lw      addi
-const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108093;
+tb_state_t state, nextState;      //     sw      add       lw       beq 
+const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108263;
 //const logic [ICLLEN-1:0] line = 128'h00408093_001080A3_001100B3_00108093;
-//       imm        rs1   f3   rt    op  addi
-//32'b000000000001_00001_000_00001_0010011
+//       imm    rs2  rs1   f3   im    op  beq
+//32'b0000000_00001_00001_000_00100_1100011
 //       imm        rs1   f3   rt    op  lw 
 //32'b000000000001_00001_000_00011_0000011
 //    f3      rs2    rs1   f3  rt     op  add
