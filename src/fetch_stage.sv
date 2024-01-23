@@ -46,8 +46,8 @@ icache icache0 (
 always_comb begin
 
     // Default case, PC + 4
+    pc_out = program_counter;
     nxtPC = program_counter + 4;
-    pc_out = nxtPC;
     inst_fetched_out = icache_instruction; //addi_1; //temp_mem[program_counter];
 
     // if stall, don't change pc and invalidates inst_fetched_out (basically a nop)
@@ -56,15 +56,16 @@ always_comb begin
         inst_fetched_out.valid = 0;
     end
 
-    // if branch taken, updates pc and invalidates inst_fetched_out (kill)
+    // if branch taken updates pc
     if(br_tk) begin
         nxtPC = pc_br_tk;
-        inst_fetched_out.valid = 0;
+        inst_fetched_out.valid = 1;
     end
 
     if(rst) begin
         nxtPC = 32'h0000; // BOOT_ADDR;
         inst_fetched_out.inst = {INST_LEN{1'b0}};
+        inst_fetched_out.valid = 0;
      end
 
 end

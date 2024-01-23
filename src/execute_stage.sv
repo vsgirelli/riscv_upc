@@ -25,7 +25,11 @@ always_comb begin
   // branch-rleated
   pc_br_tk_out = inst_exe_in.pc + inst_exe_in.immediate;
   kill_exe_out = ((inst_exe_in.valid & inst_exe_in.is_b & ~alu_result) ? 1 : 0); 
-  inst_exe_out.valid = (~(kill_exe_out) ? 1 : 0);
+  inst_exe_out.valid = ((inst_exe_in.valid & ~(kill_exe_out)) ? 1 : 0);
+
+  if (rst) begin
+    kill_exe_out = 0;
+  end
 end
 
 alu alu_inst (

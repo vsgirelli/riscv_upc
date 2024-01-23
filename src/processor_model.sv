@@ -43,8 +43,7 @@ assign stall_fet = (stall_dec);      // backward stall from decode or (TODO) ica
 always_comb begin
   // stall logic
   // TODO what about stall_fet_out
-  //inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
-  inst_dec_next = (inst_fetched_out); // TODO for some reason is not starting if i use the line above
+  inst_dec_next = (stall_dec ? inst_dec : inst_fetched_out);
   inst_exe_next = (stall_exe ? inst_exe : inst_dec_out); // if load_to_use_hazard, inst_dec_out.valid = 0
                                                          // we don't "stall" the exe, we run an invalid instruction
                                                          // that doesn't change the machine state
