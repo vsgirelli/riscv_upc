@@ -54,9 +54,9 @@ always_comb begin
 
   // branch logic // there are more things to kill here, check waves, but
   // branch more or less working
-  if (kill_exe_out) inst_mem_next.valid <= 0;
-  if (kill_exe_out) inst_exe_next.valid <= 0;
-  if (kill_exe_out) inst_dec_next.valid <= 0;
+  if (kill_exe_out) inst_mem_next.valid = 0;
+  if (kill_exe_out) inst_exe_next.valid = 0;
+  if (kill_exe_out) inst_dec_next.valid = 0;
 end
 
 always_ff @(posedge clk) begin

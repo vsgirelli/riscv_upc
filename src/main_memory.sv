@@ -21,6 +21,9 @@ const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108263;
 //32'b0000000_00001_00001_000_00001_0100011
 
 
+
+// State machine control
+//
 always_comb begin
    case(state)
        IDLE: begin 
