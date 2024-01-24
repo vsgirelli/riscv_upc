@@ -11,8 +11,8 @@ module pipelined_multiplier (
 
 reg [2*ARCH_LEN-1:0] stage1, stage2, stage3, stage4, stage5;
 
-always @(posedge clk or negedge rst) begin
-  if (!rst) begin
+always @(posedge clk) begin
+  if (!clk) begin
     // Reset all pipeline stages
     stage1 <= 2*{ARCH_LEN{1'b0}};
     stage2 <= 2*{ARCH_LEN{1'b0}};
@@ -20,13 +20,15 @@ always @(posedge clk or negedge rst) begin
     stage4 <= 2*{ARCH_LEN{1'b0}};
     stage5 <= 2*{ARCH_LEN{1'b0}};
   end else begin
+    inst_mul_out = inst_mul_in;
     stage1 = inst_mul_in.src_data_1 * inst_mul_in.src_data_2;
     stage2 = stage1;
     stage3 = stage2;
     stage4 = stage3;
-    inst_mul_out = inst_mul_in;
+    stage5 = stage4;
     inst_mul_out.dst_reg_data = stage4;
     inst_mul_out.reg_data_ready = 1;
+    // TODO signals
   end
 end
 

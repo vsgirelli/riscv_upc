@@ -17,16 +17,6 @@ reg [2*WIDTH-1:0] mult_result;  // Temporary variable for multiplication result 
 logic [ARCH_LEN:0] result;
 assign alu_result = result[ARCH_LEN-1:0];
 
-/*
-pipelined_multiplier mult_inst (
-  .clk(clk),
-  .rst(rst),
-  .operand1(operand1),
-  .operand2(operand2),
-  .mult_result(mult_result)
-);
-*/
-
 logic   signed [ARCH_LEN-1:0] sA;
 logic   signed [ARCH_LEN-1:0] sB;
 logic unsigned [ARCH_LEN-1:0] uA;
