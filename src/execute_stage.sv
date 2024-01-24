@@ -6,7 +6,7 @@ module execute_stage (
   input logic rst,
   input  inst_decoded_t inst_exe_in,
   output inst_decoded_t inst_exe_out,
-  output logic kill_exe_out, // branch taken
+  output logic br_tk_out, // branch taken
   output logic [ARCH_LEN-1:0] pc_br_tk_out  // branch taken PC address
 );
 
@@ -24,11 +24,11 @@ always_comb begin
 
   // branch-rleated
   pc_br_tk_out = inst_exe_in.pc + inst_exe_in.immediate;
-  kill_exe_out = ((inst_exe_in.valid & inst_exe_in.is_b & ~alu_result) ? 1 : 0); 
-  inst_exe_out.valid = ((inst_exe_in.valid & ~(kill_exe_out)) ? 1 : 0);
+  br_tk_out = ((inst_exe_in.valid & inst_exe_in.is_b & ~alu_result) ? 1 : 0); 
+  inst_exe_out.valid = ((inst_exe_in.valid & ~(br_tk_out)) ? 1 : 0);
 
   if (rst) begin
-    kill_exe_out = 0;
+    br_tk_out = 0;
   end
 end
 

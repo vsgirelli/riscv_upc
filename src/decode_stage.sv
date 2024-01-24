@@ -62,7 +62,8 @@ always_comb begin
 
     is_b = opcode == 7'b1100011;   // BXXx
 
-    is_m = is_r & func7[0]; //opcode == 7'h33 ? 1 : 0;
+    func7     = instruction[31:25];
+    is_m = (opcode == 7'b0110011) & (func7[0]); //opcode == 7'h33 ? 1 : 0;
 
     is_j = 0;
 
@@ -70,7 +71,6 @@ always_comb begin
     func3     = instruction[14:12];
     src_reg_1 = instruction[19:15];
     src_reg_2 = (~(is_i) ? instruction[24:20] : '0);
-    func7     = instruction[31:25];
 end
 
 // Immediate calculation logic

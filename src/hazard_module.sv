@@ -33,7 +33,6 @@ module hazard_module (
 
 // We differentiate cases that need stall from cases that need just a bypass
 // by calling the former "hazard" and the latter "bypass"
-// TODO check slide 76 if we cover all the cases
 
 logic dep_src1_ltu, dep_src2_ltu, dep_src1_exe, dep_src2_exe, dep_src1_mem, dep_src2_mem;
 always_comb begin
@@ -48,9 +47,8 @@ always_comb begin
   // Verifying bypass between inst_dec.src_data_1/src_data_2 and inst_exe.dst_reg
   // The flag reg_write_enable guarantees that is a is_r inst executing on the execute_stage
   // Distance 1 bypass
-  dep_src1_exe = inst_exe_out.valid & inst_exe_out.reg_write_enable & (inst_dec_out.src_reg_1 == inst_exe_out.dst_reg) & (inst_exe_out.dst_reg != 0); // TODO maybe "0" is bad
+  dep_src1_exe = inst_exe_out.valid & inst_exe_out.reg_write_enable & (inst_dec_out.src_reg_1 == inst_exe_out.dst_reg) & (inst_exe_out.dst_reg != 0);
   dep_src2_exe = inst_exe_out.valid & inst_exe_out.reg_write_enable & (inst_dec_out.src_reg_2 == inst_exe_out.dst_reg) & (inst_exe_out.dst_reg != 0);
-  //assign dep_dst_exe  = inst_exe_out.valid & inst_exe_out.reg_write_enable & (inst_dec_out.dst_reg   == inst_exe_out.dst_reg) & (inst_exe_out.dst_reg != 0);
   exe_bypass.dep_src1 = dep_src1_exe;
   exe_bypass.dep_src2 = dep_src2_exe;
 
@@ -60,7 +58,6 @@ always_comb begin
   // Distance 2 bypass
   dep_src1_mem = inst_mem_out.valid & inst_mem_out.reg_write_enable & (inst_dec_out.src_reg_1 == inst_mem_out.dst_reg) & (inst_mem_out.dst_reg != 0);
   dep_src2_mem = inst_mem_out.valid & inst_mem_out.reg_write_enable & (inst_dec_out.src_reg_2 == inst_mem_out.dst_reg) & (inst_mem_out.dst_reg != 0);
-  //assign dep_dst_mem  = inst_mem_out.valid & inst_mem_out.reg_write_enable & (inst_dec_out.dst_reg   == inst_mem_out.dst_reg) & (inst_mem_out.dst_reg != 0);
   mem_bypass.dep_src1 = dep_src1_mem;
   mem_bypass.dep_src2 = dep_src2_mem;
 
