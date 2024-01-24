@@ -7,7 +7,9 @@ module memory_stage (
   input inst_decoded_t inst_mem_in,
   output inst_decoded_t inst_mem_out,
   input logic stall_mem_in,
-  output logic stall_mem_out
+  output logic stall_mem_out,
+
+  data_bus.comsumer dbus
 );
 // Assuming a simple memory with read and write ports
 reg [31:0] memory [0:1023]; // 1024 words of 32 bits each

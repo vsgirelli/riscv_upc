@@ -9,7 +9,9 @@ module main_memory (
 
 typedef enum {IDLE, SERVING} tb_state_t;
 tb_state_t state, nextState;      //     sw      add       lw       beq 
-const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108263;
+//const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108263;
+                                // beq x1,x2,-16 lw x2  sw   add x1,x2,1024
+const logic [ICLLEN-1:0] line   = 128'hfe1088e3_0040a103_0010a223_40010093;
 //const logic [ICLLEN-1:0] line = 128'h00408093_001080A3_001100B3_00108093;
 //       imm    rs2  rs1   f3   im    op  beq
 //32'b0000000_00001_00001_000_00100_1100011
