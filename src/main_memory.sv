@@ -4,7 +4,7 @@ module main_memory (
     input logic clk,
     input logic rst,
 
-    instruction_bus.producer bus
+    data_bus.producer bus
 );
 
 typedef enum {IDLE, SERVING} tb_state_t;

@@ -49,7 +49,7 @@ always_comb begin
                                                          // that doesn't change the machine state
                                                          // this is inserting a bubble
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
-  inst_wb_next  = (stall_mem ? inst_wb  : inst_mem_out);
+  inst_wb_next  = inst_mem_out;
   // TODO mul?
 
   // branch logic // there are more things to kill here, check waves, but
@@ -57,6 +57,8 @@ always_comb begin
   if (kill_exe_out) inst_mem_next.valid = 0;
   if (kill_exe_out) inst_exe_next.valid = 0;
   if (kill_exe_out) inst_dec_next.valid = 0;
+
+  if (stall_mem)    inst_wb_next.valid = 0;
 end
 
 always_ff @(posedge clk) begin
@@ -65,15 +67,36 @@ always_ff @(posedge clk) begin
   inst_mul = inst_mul_next; // stall or inst_dec_out
   inst_mem = inst_mem_next; // stall, or inst_exe_out, or inst_mul_out
   inst_wb  = inst_wb_next;
+
+  if(rst) begin
+      inst_dec.valid = 0;
+      inst_exe.valid = 0;
+      inst_mul.valid = 0;
+      inst_mem.valid = 0;
+      inst_wb.valid = 0;
+  end
 end
 
 instruction_bus ibus();
+data_bus        dbus();
+data_bus        main_bus();
 
 main_memory mem0 (
     .clk,
     .rst,
 
-    .bus(ibus)
+    .bus(main_bus)
+);
+
+
+memory_controller mctrl (
+    .clk,
+    .rst,
+
+    .icache_bus(ibus),
+    .dcache_bus(dbus),
+
+    .main_bus
 );
 
 // TODO comment the inputs and outputs of the stages 
@@ -136,7 +159,9 @@ memory_stage memory_inst (
   .inst_mem_in(inst_mem),
   .inst_mem_out(inst_mem_out),
   .stall_mem_in(stall_mem),
-  .stall_mem_out(stall_mem_out)
+  .stall_mem_out(stall_mem_out),
+
+  .dbus
 );
 
 

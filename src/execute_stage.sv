@@ -13,12 +13,14 @@ module execute_stage (
 
 logic [ARCH_LEN-1:0] op1, op2;
 logic [ARCH_LEN-1:0] alu_result;
+logic [2:0] alu_op;
+logic [6:0] alu_mod;
 
 // normal ALU 
 always_comb begin
   inst_exe_out = inst_exe_in;
   op1 = inst_exe_in.src_data_1;
-  op2 = ((inst_exe_in.valid & inst_exe_in.is_i) ? inst_exe_in.immediate : inst_exe_in.src_data_2);
+  op2 = ((inst_exe_in.valid & (inst_exe_in.is_i | inst_exe_in.is_s)) ? inst_exe_in.immediate : inst_exe_in.src_data_2);
   inst_exe_out.dst_reg_data   = alu_result;
   inst_exe_out.reg_data_ready = (inst_exe_in.is_r | inst_exe_in.is_i) & ~(inst_exe_in.is_s | inst_exe_in.is_l | inst_exe_in.is_b);
 
@@ -26,6 +28,10 @@ always_comb begin
   pc_br_tk_out = inst_exe_in.pc + inst_exe_in.immediate;
   kill_exe_out = ((inst_exe_in.valid & inst_exe_in.is_b & ~alu_result) ? 1 : 0); 
   inst_exe_out.valid = ((inst_exe_in.valid & ~(kill_exe_out)) ? 1 : 0);
+
+  // Logic to force add in ALU for mem operations
+  alu_op = inst_exe_in.is_s | inst_exe_in.is_l ? 3'b000 : inst_exe_in.func3;
+  alu_mod = inst_exe_in.is_s | inst_exe_in.is_l ? 7'b0000000 : inst_exe_in.func7;
 
   if (rst) begin
     kill_exe_out = 0;
@@ -37,8 +43,8 @@ alu alu_inst (
 
   .operand1(op1),
   .operand2(op2),
-  .alu_op3(inst_exe_in.func3),
-  .alu_op7(inst_exe_in.func7),
+  .alu_op3(alu_op),
+  .alu_op7(alu_mod),
   .alu_result(alu_result)
 );
 
