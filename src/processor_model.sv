@@ -47,7 +47,9 @@ always_comb begin
                                                          // this is inserting a bubble
   //inst_mul_next = (stall_mul ? inst_mul : inst_dec_out);
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
-  inst_wb_next  = (stall_mem ? inst_wb  : inst_mem_out);
+  inst_wb_next  = inst_mem_out;
+
+  if (stall_mem)    inst_wb_next.valid = 0;
 
   // choosing the right path for mul instructions
   // if inst_dec_out.is_m, then we kill inst_exe_next and send inst_mul_next
@@ -55,10 +57,10 @@ always_comb begin
   //else inst_mul_next.valid <= 0;
 
   // branch taken logic
-  if (br_tk_out) inst_mem_next.valid <= 0;
-  if (br_tk_out) inst_exe_next.valid <= 0;
-  //if (br_tk_out) inst_mul_next.valid <= 0;
-  if (br_tk_out) inst_dec_next.valid <= 0;
+  if (br_tk_out) inst_mem_next.valid = 0;
+  if (br_tk_out) inst_exe_next.valid = 0;
+  //if (br_tk_out) inst_mul_next.valid = 0;
+  if (br_tk_out) inst_dec_next.valid = 0;
 end
 
 always_ff @(posedge clk) begin
@@ -67,24 +69,48 @@ always_ff @(posedge clk) begin
   //inst_mul = inst_mul_next; // stall or inst_dec_out
   inst_mem = inst_mem_next; // stall, or inst_exe_out, or inst_mul_out
   inst_wb  = inst_wb_next;
+
+  if(rst) begin
+      inst_dec.valid = 0;
+      inst_exe.valid = 0;
+      inst_mul.valid = 0;
+      inst_mem.valid = 0;
+      inst_wb.valid = 0;
+  end
 end
 
 instruction_bus ibus();
+data_bus        dbus();
+data_bus        main_bus();
 
 main_memory mem0 (
     .clk,
     .rst,
 
-    .bus(ibus)
+    .bus(main_bus)
 );
 
-// TODO comment the inputs and outputs of the stages 
+
+memory_controller mctrl (
+    .clk,
+    .rst,
+
+    .icache_bus(ibus),
+    .dcache_bus(dbus),
+
+    .main_bus
+);
+
 hazard_module hazards (
   .clk(clk),
   .rst(rst),
+
+  // (input) instructions leaving ID, EXE, and MEM
   .inst_dec_out(inst_dec_out),
   .inst_exe_out(inst_exe_out),
   .inst_mem_out(inst_mem_out),
+
+  // (output) dependencies between the above instructions
   .exe_bypass(exe_bypass),
   .mem_bypass(mem_bypass),
   .load_to_use_hazard(load_to_use_hazard)
@@ -93,33 +119,56 @@ hazard_module hazards (
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
-  .inst_fetched_out(inst_fetched_out),
+  // instruction bus
+  .ibus(ibus),
+
+  // (input) stall fetch signal backward propagated
   .stall_fet_in(stall_fet),
+
+  // (input) branch signal and target address
   .br_tk(br_tk_out),
   .pc_br_tk(pc_br_tk),
-  .pc_out(pc_fet_out),
-  .ibus(ibus)
+
+  // (output) instruction fetched and its PC
+  .inst_fetched_out(inst_fetched_out),
+  .pc_out(pc_fet_out)
 );
 
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
-  .pc_in(pc_fet_out),
+
+  // (input) instruction fetched and its PC
   .inst_fetched_in(inst_dec),
-  .inst_dec_out(inst_dec_out),
+  .pc_in(pc_fet_out),
+
+  // (input) instruction writing back
   .inst_wb_in(inst_wb),
+
+  // (input) stall decode in case of load_to_use_hazard
   .load_to_use_hazard(load_to_use_hazard),
+
+  // (input) instructions from other stages and their bypass signals
   .inst_exe_out(inst_exe_out), // current EXE instruction
   .exe_bypass(exe_bypass),     // EXE Bypass signals
   .inst_mem_out(inst_mem_out), // current MEM instruction
-  .mem_bypass(mem_bypass)      // MEM Bypass signals
+  .mem_bypass(mem_bypass),     // MEM Bypass signals
+
+  // (output) instruction decoded
+  .inst_dec_out(inst_dec_out)
 );
 
 execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
+
+  // (input)
   .inst_exe_in(inst_exe),
+
+  // (output)
   .inst_exe_out(inst_exe_out),
+
+  // (output) branch verification and target address
   .br_tk_out(br_tk_out),
   .pc_br_tk_out(pc_br_tk)
 );
@@ -134,10 +183,17 @@ pipelined_multiplier multiplier_inst (
 memory_stage memory_inst (
   .clk(clk),
   .rst(rst),
+
+  // (input)
   .inst_mem_in(inst_mem),
+
+  // (output)
   .inst_mem_out(inst_mem_out),
-  .stall_mem_in(stall_mem),
-  .stall_mem_out(stall_mem_out)
+
+  // output stall signal in case of miss
+  .stall_mem_out(stall_mem_out),
+
+  .dbus
 );
 
 

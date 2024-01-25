@@ -18,7 +18,7 @@ reg [ARCH_LEN-1:0] program_counter;
 
 logic [ARCH_LEN-1:0] nxtPC;
 
-logic [7:0] temp_mem [1024:0];
+//logic [7:0] temp_mem [1024:0];
 //initial
 const logic [INST_LEN-1:0] addi_1 = 32'b000000000001_00001_000_00001_0010011;  
 const logic [INST_LEN-1:0] noop = 32'b000000000000_00000_000_00000_0010011;  

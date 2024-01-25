@@ -47,7 +47,7 @@ module tb_icache
     .instr_data(instruction),
     .miss(out_miss),
 
-    bus(ibus.consumer)
+    .bus(ibus.consumer)
   );
 
 assign in_enable = 1;

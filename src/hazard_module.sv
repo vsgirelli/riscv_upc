@@ -5,21 +5,18 @@ module hazard_module (
   input logic clk,
   input logic rst,
 
-  // we basically compare the current inst of each stage to check dependencies
-
-  // instructions in or out decode_stage
+  // instruction out decode_stage
   input inst_decoded_t inst_dec_out,
-  // instructions in or out execute_stage
+  // instruction out execute_stage
   input inst_decoded_t inst_exe_out,
-  // instructions in or out memory_stage
+  // instruction out memory_stage
   input inst_decoded_t inst_mem_out,
 
-  // bypasses
+  // bypass signals
   output bypass_t exe_bypass,
   output bypass_t mem_bypass,
 
-  // stalls
-  // these stalls make the inst_x in the processor to remain the same
+  // stall in case of load_to_use_hazard
   output logic load_to_use_hazard,
 
   // exceptions TODO
@@ -27,7 +24,7 @@ module hazard_module (
   output logic kill_dec,
   output logic kill_exe,
   output logic kill_mem,
-  output logic kill_wb // we don't have WB stage but we have an inst_wb_in in the decode_stage
+  output logic kill_wb
 
 );
 
