@@ -6,9 +6,11 @@ module pipelined_multiplier (
   input logic clk,
   input logic rst,
   input inst_decoded_t inst_mul_in,
-  output inst_decoded_t inst_mul_out
+  output inst_decoded_t inst_mul_out,
+  output logic stall_mul_out
 );
 
+assign stall_mul_out = 0;
 reg [2*ARCH_LEN-1:0] stage1, stage2, stage3, stage4, stage5;
 
 always @(posedge clk) begin

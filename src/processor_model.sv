@@ -33,10 +33,9 @@ logic stall_fet_out, stall_dec_out, stall_exe_out, stall_mul_out, stall_mem_out;
 // simply propagate backwards the stall signals
 assign stall_mem = stall_mem_out; // in case of dcache miss
 assign stall_exe = stall_mem;     // backward stall from mem
-assign stall_dec = (stall_exe | load_to_use_hazard); // backward stall from exe, decode load to use hazard,
-                   //(inst_dec_out.is_m & inst_mul_next.valid & ~inst_mul.reg_data_ready)); // or if is mull and inst didn't end (easier to stall)
-//assign stall_mul = (inst_mul.valid & ~inst_mul_out.reg_data_ready);
-assign stall_fet = (stall_dec);   // backward stall from decode
+assign stall_dec = (stall_exe | load_to_use_hazard | stall_mul_out); // backward stall from exe, decode load to use hazard, or if it's mul and not ready
+assign stall_mul = stall_mem;     // backward stall from mem
+assign stall_fet = stall_dec;     // backward stall from decode
 
 always_comb begin
   // stall logic
@@ -45,28 +44,33 @@ always_comb begin
                                                          // we don't "stall" the exe, we run an invalid instruction
                                                          // that doesn't change the machine state
                                                          // this is inserting a bubble
-  //inst_mul_next = (stall_mul ? inst_mul : inst_dec_out);
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
-  inst_wb_next  = inst_mem_out;
-
-  if (stall_mem)    inst_wb_next.valid = 0;
 
   // choosing the right path for mul instructions
   // if inst_dec_out.is_m, then we kill inst_exe_next and send inst_mul_next
-  //if (inst_dec_out.valid & inst_dec_out.is_m) inst_exe_next.valid <= 0;
-  //else inst_mul_next.valid <= 0;
+  inst_mul_next = inst_dec_out;
+  if (inst_dec_out.valid & inst_dec_out.is_m) inst_exe_next.valid <= 0;
+  else inst_mul_next.valid <= 0;
+
+  if (inst_mem_out.valid) begin
+    inst_wb_next <= inst_mem_out;
+    if (rst | stall_mem) inst_wb_next.valid  <= 0;
+  end else begin
+    inst_wb_next <= inst_mul_out;
+    //if (rst | killMS ) inst_wb_next.valid  <= 0;
+  end
 
   // branch taken logic
   if (br_tk_out) inst_mem_next.valid = 0;
   if (br_tk_out) inst_exe_next.valid = 0;
-  //if (br_tk_out) inst_mul_next.valid = 0;
+  if (br_tk_out) inst_mul_next.valid = 0;
   if (br_tk_out) inst_dec_next.valid = 0;
 end
 
 always_ff @(posedge clk) begin
   inst_dec = inst_dec_next; // either I stall, or I get inst_fetched_out
   inst_exe = inst_exe_next; // stall or inst_dec_out
-  //inst_mul = inst_mul_next; // stall or inst_dec_out
+  inst_mul = inst_mul_next; // stall or inst_dec_out
   inst_mem = inst_mem_next; // stall, or inst_exe_out, or inst_mul_out
   inst_wb  = inst_wb_next;
 
@@ -177,7 +181,8 @@ pipelined_multiplier multiplier_inst (
   .clk(clk),
   .rst(rst),
   .inst_mul_in(inst_mul),
-  .inst_mul_out(inst_mul_out)
+  .inst_mul_out(inst_mul_out),
+  .stall_mul_out(stall_mul_out)
 );
 
 memory_stage memory_inst (
