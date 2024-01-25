@@ -54,6 +54,7 @@ always_comb begin
 
   if (inst_mem_out.valid) begin
     inst_wb_next <= inst_mem_out;
+    //stall_mul = 1;
     if (rst | stall_mem) inst_wb_next.valid  <= 0;
   end else begin
     inst_wb_next <= inst_mul_out;
@@ -182,6 +183,7 @@ pipelined_multiplier multiplier_inst (
   .rst(rst),
   .inst_mul_in(inst_mul),
   .inst_mul_out(inst_mul_out),
+  .stall_mul_in(stall_mul),
   .stall_mul_out(stall_mul_out)
 );
 
