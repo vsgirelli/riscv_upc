@@ -12,7 +12,7 @@ work: $(VLOG_FILES)
 	vlog -work work -sv $^
 
 modelsim: work
-	vsim work.tb_proc -do tb_proc_env.do
+	vsim work.tb_proc -do mult.do
 
 modelsim_icache: work
 	vsim work.tb_icache -do tb_icache_env.do

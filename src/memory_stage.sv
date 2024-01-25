@@ -6,7 +6,6 @@ module memory_stage (
   input logic rst,
   input inst_decoded_t inst_mem_in,
   output inst_decoded_t inst_mem_out,
-  input logic stall_mem_in,
   output logic stall_mem_out,
 
   data_bus.consumer dbus

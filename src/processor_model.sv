@@ -48,7 +48,6 @@ always_comb begin
   //inst_mul_next = (stall_mul ? inst_mul : inst_dec_out);
   inst_mem_next = (stall_mem ? inst_mem : inst_exe_out);
   inst_wb_next  = inst_mem_out;
-  // TODO mul?
 
   if (stall_mem)    inst_wb_next.valid = 0;
 
@@ -102,13 +101,16 @@ memory_controller mctrl (
     .main_bus
 );
 
-// TODO comment the inputs and outputs of the stages 
 hazard_module hazards (
   .clk(clk),
   .rst(rst),
+
+  // (input) instructions leaving ID, EXE, and MEM
   .inst_dec_out(inst_dec_out),
   .inst_exe_out(inst_exe_out),
   .inst_mem_out(inst_mem_out),
+
+  // (output) dependencies between the above instructions
   .exe_bypass(exe_bypass),
   .mem_bypass(mem_bypass),
   .load_to_use_hazard(load_to_use_hazard)
@@ -117,33 +119,56 @@ hazard_module hazards (
 fetch_stage fetch_inst (
   .clk(clk),
   .rst(rst),
-  .inst_fetched_out(inst_fetched_out),
+  // instruction bus
+  .ibus(ibus),
+
+  // (input) stall fetch signal backward propagated
   .stall_fet_in(stall_fet),
+
+  // (input) branch signal and target address
   .br_tk(br_tk_out),
   .pc_br_tk(pc_br_tk),
-  .pc_out(pc_fet_out),
-  .ibus(ibus)
+
+  // (output) instruction fetched and its PC
+  .inst_fetched_out(inst_fetched_out),
+  .pc_out(pc_fet_out)
 );
 
 decode_stage decode_inst (
   .clk(clk),
   .rst(rst),
-  .pc_in(pc_fet_out),
+
+  // (input) instruction fetched and its PC
   .inst_fetched_in(inst_dec),
-  .inst_dec_out(inst_dec_out),
+  .pc_in(pc_fet_out),
+
+  // (input) instruction writing back
   .inst_wb_in(inst_wb),
+
+  // (input) stall decode in case of load_to_use_hazard
   .load_to_use_hazard(load_to_use_hazard),
+
+  // (input) instructions from other stages and their bypass signals
   .inst_exe_out(inst_exe_out), // current EXE instruction
   .exe_bypass(exe_bypass),     // EXE Bypass signals
   .inst_mem_out(inst_mem_out), // current MEM instruction
-  .mem_bypass(mem_bypass)      // MEM Bypass signals
+  .mem_bypass(mem_bypass),     // MEM Bypass signals
+
+  // (output) instruction decoded
+  .inst_dec_out(inst_dec_out)
 );
 
 execute_stage execute_inst (
   .clk(clk),
   .rst(rst),
+
+  // (input)
   .inst_exe_in(inst_exe),
+
+  // (output)
   .inst_exe_out(inst_exe_out),
+
+  // (output) branch verification and target address
   .br_tk_out(br_tk_out),
   .pc_br_tk_out(pc_br_tk)
 );
@@ -158,9 +183,14 @@ pipelined_multiplier multiplier_inst (
 memory_stage memory_inst (
   .clk(clk),
   .rst(rst),
+
+  // (input)
   .inst_mem_in(inst_mem),
+
+  // (output)
   .inst_mem_out(inst_mem_out),
-  .stall_mem_in(stall_mem),
+
+  // output stall signal in case of miss
   .stall_mem_out(stall_mem_out),
 
   .dbus
