@@ -1,2 +1,2 @@
 source initial.do
-run 20ns
+run 220ns

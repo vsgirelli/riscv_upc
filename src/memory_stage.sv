@@ -39,7 +39,7 @@ dcache dcache_l1 (
 always_comb begin
     inst_mem_out = inst_mem_in;
     inst_mem_out.valid = inst_mem_in.valid;
-    inst_mem_out.dst_reg = inst_mem_in.is_l ? data_loaded : inst_mem_in.dst_reg;
+    inst_mem_out.dst_reg_data = inst_mem_in.is_l ? data_loaded : inst_mem_in.dst_reg_data;
     inst_mem_out.reg_data_ready = inst_mem_in.is_l ? ~out_miss & inst_mem_in.is_l : inst_mem_in.reg_data_ready;
     stall_mem_out = out_miss & inst_mem_in.valid;
 end

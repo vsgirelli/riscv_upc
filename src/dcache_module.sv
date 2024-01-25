@@ -53,8 +53,26 @@ assign i_index = current_addr[indexBits+offsetBits-1:offsetBits]; // index comin
 logic is_hit;
 
 logic [(DCLLEN/8)-1:0][7:0] selLine;
+logic [(DCLLEN/8)-1:0][7:0] selLineB;
+logic [(DCLLEN/32)-1:0][31:0] selLineW;
 
-assign instr_data = selectedData;
+assign o_data = selectedData;
+
+logic [(ARCH_LEN/8)-1:0][7:0] decompIData; // Input data decomposed in bytes
+assign decompIData = i_data;
+
+logic [(DCLLEN/8)-1:0][7:0] decompSData; // Selected data decomposed in bytes
+assign decompSData = selectedData;
+
+logic [(DCLLEN/8)-1:0][7:0] maskedData; // Masked data
+logic [(DCLLEN/8)-1:0] mem_mask; 
+
+genvar j;
+generate
+  for (j = 0; j < DCLLEN/8; j++) begin
+    assign maskedData[j] = mem_mask[j] ? decompIData[j%4] : decompSData[j] ;
+  end
+endgenerate
 
 // Data logic
 genvar i;
@@ -76,9 +94,19 @@ generate
             end else if(dbus.ldr) begin // If load is ready in bus to memory, we put it
                 if(i == i_index) begin
                     nextValid[i] <= 1;
-                    nextTags[i] <= current_addr[19:19-tagBits];
+                    nextTags[i] <= current_addr[19:19-(tagBits-1)];
                     nextData[i] <= dbus.ldData;
+                    nextDirty[i] <= 0;
                 end
+            end else if(dbus.srr) begin // If store completed, mark as no dirty
+                if(i == i_index) begin
+                    nextDirty[i] <= 0;
+                end
+            end else if(enable & we & ~miss) begin // Store
+               if(i == i_index) begin
+                   nextData[i] <= maskedData;
+                   nextDirty[i] <= 1;
+               end
             end
         end
 
@@ -86,6 +114,7 @@ generate
             data[i] <= nextData[i];
             tags[i] <= nextTags[i];
             valid[i] <= nextValid[i];
+            dirty[i] <= nextDirty[i];
         end
 	end
 endgenerate
@@ -96,6 +125,7 @@ always_comb begin
     selectedDirty = dirty[i_index];
     
     selLine = data[i_index];
+    selLineW = data[i_index];
     case(width)
         0: selectedData = {{24{selLine[current_addr[3:0]][7]}}, selLine[current_addr[3:0]]};
         1: selectedData = {{16{selLine[current_addr[3:0] + 1][7]}}, selLine[current_addr[3:0] + 1], selLine[current_addr[3:0]]};
@@ -104,11 +134,16 @@ always_comb begin
         5: selectedData = {16'b0, selLine[current_addr[3:0] + 1], selLine[current_addr[3:0]]};
         default: selectedData = {selLine[current_addr[3:0] + 3], selLine[current_addr[3:0] + 2], selLine[current_addr[3:0] + 1], selLine[current_addr[3:0]]};
     endcase
-        
+
+    case(width)
+        0: mem_mask = 16'h01  << current_addr[3:0];
+        1: mem_mask = 16'h03  << current_addr[3:0];
+        2: mem_mask = 16'h0F  << current_addr[3:0];
+    endcase
 end
 
 always_comb
-    is_hit = selectedValid & (selectedTag == current_addr[19:19-tagBits]);
+    is_hit = selectedValid & (selectedTag == current_addr[19:19-(tagBits-1)]);
 
 
 // Control logic
@@ -122,8 +157,7 @@ always_comb begin
         IDLE: begin
             miss = ~is_hit & enable;
             evict = ~is_hit & enable & selectedDirty;
-            if(miss & enable) begin
-
+            if(miss) begin
                 nextState = selectedDirty ? SRP : LDP;
                 next_addr_buff = ~evict ? addr : {selectedTag, i_index, 4'b0};
             end
@@ -150,7 +184,7 @@ always_comb begin
             evict = 1;
             miss = 1;
             if (dbus.srr) begin
-                nextState = LDP;
+                nextState = IDLE;
                 next_addr_buff = addr;
             end
             else nextState = SRP;
@@ -176,5 +210,6 @@ always_comb begin
 end
 
 assign dbus.addr = {current_addr[PHY_LEN-1:4], 4'b0};
+assign dbus.srData = selLine;
 
 endmodule
