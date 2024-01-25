@@ -11,7 +11,7 @@ module execute_stage (
   output logic [ARCH_LEN-1:0] pc_br_tk_out  // branch taken target address
 );
 
-
+logic negative, zero;
 logic [ARCH_LEN-1:0] op1, op2;
 logic [ARCH_LEN-1:0] alu_result;
 logic [2:0] alu_op;
@@ -27,7 +27,7 @@ always_comb begin
 
   // branch-related
   pc_br_tk_out = inst_exe_in.pc + inst_exe_in.immediate;
-  br_tk_out = ((inst_exe_in.valid & inst_exe_in.is_b & ~alu_result) ? 1 : 0); 
+  br_tk_out = ((inst_exe_in.valid & inst_exe_in.is_b & zero) ? 1 : 0); 
   inst_exe_out.valid = ((inst_exe_in.valid & ~(br_tk_out)) ? 1 : 0);
 
   // Logic to force add in ALU for mem operations
@@ -46,7 +46,9 @@ alu alu_inst (
   .operand2(op2),
   .alu_op3(alu_op),
   .alu_op7(alu_mod),
-  .alu_result(alu_result)
+  .alu_result(alu_result),
+  .negative(negative),
+  .zero(zero)
 );
 
 
