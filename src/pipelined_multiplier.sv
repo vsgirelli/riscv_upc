@@ -7,31 +7,37 @@ module pipelined_multiplier (
   input logic rst,
   input inst_decoded_t inst_mul_in,
   output inst_decoded_t inst_mul_out,
+  input logic kill_mul,
+  input logic stall_mul_in,
   output logic stall_mul_out
 );
-
 assign stall_mul_out = 0;
-reg [2*ARCH_LEN-1:0] stage1, stage2, stage3, stage4, stage5;
+inst_decoded_t instMS_ff[3:0];
+inst_decoded_t nxInstMS_ff[3:0];
+                
+genvar i;
+generate
 
-always @(posedge clk) begin
-  if (!clk) begin
-    // Reset all pipeline stages
-    stage1 <= 2*{ARCH_LEN{1'b0}};
-    stage2 <= 2*{ARCH_LEN{1'b0}};
-    stage3 <= 2*{ARCH_LEN{1'b0}};
-    stage4 <= 2*{ARCH_LEN{1'b0}};
-    stage5 <= 2*{ARCH_LEN{1'b0}};
-  end else begin
-    inst_mul_out = inst_mul_in;
-    stage1 = inst_mul_in.src_data_1 * inst_mul_in.src_data_2;
-    stage2 = stage1;
-    stage3 = stage2;
-    stage4 = stage3;
-    stage5 = stage4;
-    inst_mul_out.dst_reg_data = stage4;
-    inst_mul_out.reg_data_ready = 1;
-    // TODO signals
+for(i = 1; i < 4; i++) begin : ms_ff_cotrol
+  always_comb
+  begin
+    if (stall_mul_in) nxInstMS_ff[i] <= instMS_ff[i];
+    else         nxInstMS_ff[i] <= instMS_ff[i-1]; 
+
+    // TODO: convert killMS and analogous to kill (from the graduation
+    //       list)
+    if (rst | kill_mul) nxInstMS_ff[i].valid <= 0;
   end
+
+  always_ff @(posedge clk)
+    instMS_ff[i] = nxInstMS_ff[i];
 end
+endgenerate
+
+always_comb begin
+    nxInstMS_ff[0] = inst_mul_in;
+    nxInstMS_ff[0].valid = inst_mul_in.is_m;
+end 
+    
 
 endmodule
