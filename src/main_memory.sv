@@ -7,8 +7,6 @@ module main_memory (
     data_bus.producer bus
 );
 
-typedef enum {IDLE, SERVING} tb_state_t;
-tb_state_t state, nextState;      //     sw      add      mul      addi
 const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_021081B3_00108093;
 //const logic [ICLLEN-1:0] line   = 128'h001080A3_003100B3_00108183_00108263;
                                 // beq x1,x2,-16 lw x2  sw   add x1,x2,1024
